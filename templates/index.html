@@ -12,10 +12,8 @@
     </div>
 
     <div id="maquete-container">
-        <!-- A imagem de fundo da sua maquete entra via CSS -->
         <img id="carro-animado" src="/static/img/carro.png" style="display:none; position:absolute; z-index:10;">
         
-        <!-- Exemplo de Vaga (Você criará 30 destas) -->
         <div id="vaga-1" class="vaga" style="top: 20%; left: 10%;">1</div>
     </div>
 
@@ -26,17 +24,15 @@
         socket.on('update_vagas', (data) => {
             document.getElementById('count').innerText = data.ocupadas;
             
-            // Lógica para mover o ícone do carro na tela baseado na YOLO
             if(data.deteccoes.length > 0) {
                 carro.style.display = 'block';
-                // Conversão simples de escala (ajuste conforme necessário)
-                carro.style.left = (data.deteccoes[0][0] / 10) + '%';
-                carro.style.top = (data.deteccoes[0][1] / 10) + '%';
+                carro.style.left = data.deteccoes[0].x + '%';
+                carro.style.top  = data.deteccoes[0].y + '%';
             }
         });
 
         socket.on('evento_arduino', (data) => {
-            alert(data.msg); // Notifica entrada de carro
+            alert(data.msg);
         });
     </script>
 </body>
