@@ -1,39 +1,72 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-    <title>Smart Parking - Meu Guru</title>
-    <link rel="stylesheet" href="/static/css/style.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+<title>Smart Parking</title>
+
+<link rel="stylesheet" href="/static/css/style.css">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+
 </head>
+
 <body>
-    <div id="dashboard">
-        <h1>Estacionamento Inteligente</h1>
-        <p>Vagas Ocupadas: <span id="count">0</span> / 30</p>
-    </div>
 
-    <div id="maquete-container">
-        <img id="carro-animado" src="/static/img/carro.png" style="display:none; position:absolute; z-index:10;">
-        
-        <div id="vaga-1" class="vaga" style="top: 20%; left: 10%;">1</div>
-    </div>
+<!--
+<div id="dashboard">
+<h1>Estacionamento Inteligente</h1>
+<p>Vagas Ocupadas: <span id="count">0</span> / 31</p>
+</div>
+-->
 
-    <script>
-        const socket = io();
-        const carro = document.getElementById('carro-animado');
+<div id="maquete-container">
 
-        socket.on('update_vagas', (data) => {
-            document.getElementById('count').innerText = data.ocupadas;
-            
-            if(data.deteccoes.length > 0) {
-                carro.style.display = 'block';
-                carro.style.left = data.deteccoes[0].x + '%';
-                carro.style.top  = data.deteccoes[0].y + '%';
-            }
-        });
+<img src="/static/img/Maquete.jpeg" id="maquete-img">
 
-        socket.on('evento_arduino', (data) => {
-            alert(data.msg);
-        });
-    </script>
+<img id="carro-animado"
+src="/static/img/carro_icon.svg"
+style="display:none; position:absolute; z-index:20; width:40px;">
+
+<!-- VAGAS -->
+
+<div id="vaga-1" class="vaga">1</div>
+<div id="vaga-2" class="vaga">2</div>
+<div id="vaga-3" class="vaga">3</div>
+<div id="vaga-4" class="vaga">4</div>
+<div id="vaga-5" class="vaga">5</div>
+<div id="vaga-6" class="vaga">6</div>
+<div id="vaga-7" class="vaga">7</div>
+<div id="vaga-8" class="vaga">8</div>
+<div id="vaga-9" class="vaga">9</div>
+<div id="vaga-10" class="vaga">10</div>
+
+<div id="vaga-11" class="vaga">11</div>
+<div id="vaga-12" class="vaga">12</div>
+<div id="vaga-13" class="vaga">13</div>
+<div id="vaga-14" class="vaga">14</div>
+<div id="vaga-15" class="vaga">15</div>
+<div id="vaga-16" class="vaga">16</div>
+<div id="vaga-17" class="vaga">17</div>
+<div id="vaga-18" class="vaga">18</div>
+<div id="vaga-19" class="vaga">19</div>
+<div id="vaga-20" class="vaga">20</div>
+
+<div id="vaga-21" class="vaga">21</div>
+<div id="vaga-22" class="vaga">22</div>
+<div id="vaga-23" class="vaga">23</div>
+<div id="vaga-24" class="vaga">24</div>
+<div id="vaga-25" class="vaga">25</div>
+<div id="vaga-26" class="vaga">26</div>
+<div id="vaga-27" class="vaga">27</div>
+<div id="vaga-28" class="vaga">28</div>
+<div id="vaga-29" class="vaga">29</div>
+<div id="vaga-30" class="vaga">30</div>
+
+<div id="vaga-31" class="vaga">31</div>
+
+</div>
+
+<script src="/static/js/main.js"></script>
+
 </body>
 </html>

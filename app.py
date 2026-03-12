@@ -10,7 +10,7 @@ app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 # --- CONFIGURAÇÕES ---
-MODEL_PATH = 'model/yolov8n.pt'
+MODEL_PATH = 'yolov8n.pt'  
 SERIAL_PORT = 'COM3' 
 BAUD_RATE = 9600
 TOTAL_VAGAS = 32
@@ -36,7 +36,7 @@ def serial_thread():
 def vision_thread():
     cap = cv2.VideoCapture(0)
     
-    # Pegamos a resolução da câmera para normalizar as coordenadas
+    # resolução da câmera para normalizar as coordenadas
     width  = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
     height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
 
@@ -45,7 +45,7 @@ def vision_thread():
         if not ret:
             break
 
-        # Rodar inferência (stream=True é mais eficiente para vídeos)
+        # Rodar inferência
         results = model.predict(frame, conf=0.5, verbose=False, stream=True)
         
         detections = []
@@ -53,11 +53,11 @@ def vision_thread():
             boxes = r.boxes
             for box in boxes:
                 cls = int(box.cls[0])
-                if cls == 2:  # 2 = Carro no COCO Dataset
-                    # Pegamos as coordenadas x, y, w, h
+                if cls == 2: 
+                    # coordenadas x, y, w, h
                     coords = box.xyxy[0].cpu().numpy()
                     
-                    # Normalizamos para % (0 a 100) para o CSS do Frontend facilitar
+                    
                     norm_x = (coords[0] / width) * 100
                     norm_y = (coords[1] / height) * 100
                     detections.append({'x': norm_x, 'y': norm_y})
@@ -72,7 +72,7 @@ def vision_thread():
         # Controle de FPS para não sobrecarregar a CPU/GPU
         time.sleep(0.3) 
 
-    cap.release() # CORRIGIDO: Fora do While
+    cap.release()
 
 @app.route('/')
 def index():
@@ -86,5 +86,5 @@ if __name__ == '__main__':
     t_vision.start()
     t_serial.start()
     
-    # debug=False é recomendado ao usar Threads e Câmera para evitar reinicializações duplas
+    # debug=False para evitar reinicializações duplas
     socketio.run(app, host='0.0.0.0', port=5000, debug=False)
