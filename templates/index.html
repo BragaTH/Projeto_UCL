@@ -1,35 +1,42 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-<title>Smart Parking</title>
-
-<link rel="stylesheet" href="/static/css/style.css">
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
-
+    <title>Smart Parking</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
 </head>
-
 <body>
 
-<!--
-<div id="dashboard">
-<h1>Estacionamento Inteligente</h1>
-<p>Vagas Ocupadas: <span id="count">0</span> / 31</p>
-</div>
--->
+    <header id="topbar">
+        <div id="logo">SMART<span>PARK</span> UCL</div>
+        <div id="status-pill">
+            <div class="dot"></div>
+            sistema ativo — câmera 01
+        </div>
+        <div id="datetime">
+            <span id="data"></span>
+            &nbsp;|&nbsp;
+            <span id="hora"></span>
+        </div>
+    </header>
 
-<div id="maquete-container">
+    <div id="maquete-container">
+        <img src="/static/img/estacionamento.png" id="estacionamento">
+    </div>
 
-<img src="/static/img/estacionamento.png" id="estacionamento">
+    <script src="/static/js/main.js"></script>
 
-
-<img id="carro-animado"
-src="/static/img/carro_icon.svg"
-style="display:none; position:absolute; z-index:20; width:40px;">
-
-
-<script src="/static/js/main.js"></script>
+    <script>
+        function atualizarRelogio() {
+            const agora = new Date();
+            const data = agora.toLocaleDateString('pt-BR', { weekday:'long', day:'2-digit', month:'long', year:'numeric' });
+            const hora = agora.toLocaleTimeString('pt-BR');
+            document.getElementById('data').textContent = data;
+            document.getElementById('hora').textContent = hora;
+        }
+        atualizarRelogio();
+        setInterval(atualizarRelogio, 1000);
+    </script>
 
 </body>
 </html>
