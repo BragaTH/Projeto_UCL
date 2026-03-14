@@ -1,6 +1,10 @@
 import cv2
 
+<<<<<<< HEAD
 CAMINHO_IMAGEM = 'static/img/estacionamento.png'
+=======
+CAMINHO_IMAGEM = 'static/img/Maquete.jpeg'
+>>>>>>> d661233e861b7b893b511f20007df4d8bc768a6d
 
 vagas_coordenadas = []
 
