@@ -1,85 +1,49 @@
-html, body{
-    margin:0;
-    padding:0;
-    background:#111;
-    height:100vh;
-
-    display:flex;
-    justify-content:center;
-    align-items:center;
+html, body {
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(135deg, #0d0d0d 0%, #1a1a2e 50%, #0d0d0d 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-/* CONTAINER DA MAQUETE */
-#mapa-estacionamento {
+#maquete-container {
     position: relative;
-    max-width: 1000px;
+    width: 90vw;
+    max-width: 1400px;
 }
 
-/* IMAGEM DA MAQUETE */
-#mapa-estacionamento img {
+#estacionamento {
     width: 100%;
-    max-height: 80vh;
+    max-height: 90vh;
     object-fit: contain;
-    display:block;
+    display: block;
 }
 
-/* VAGAS */
-.vaga{
-    position:absolute;
-    width:6%;
-    height:10%;
-    border:2px solid #00ff00;
-    background:rgba(0,255,0,0.2);
-
-    display:flex;
-    align-items:center;
-    justify-content:center;
-
-    color:white;
-    font-size:11px;
-    font-weight:bold;
-
-    border-radius:4px;
-
-    transform:translate(-50%,-50%);
+.vaga {
+    position: absolute;
+    width: 6%;
+    height: 10%;
+    border: 2px solid #00ff00;
+    background: rgba(0,255,0,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 11px;
+    font-weight: bold;
+    border-radius: 4px;
+    transform: translate(-50%,-50%);
 }
-.vaga-horizontal{
-    transform:translate(-50%,-50%) rotate(90deg);
+.vaga-horizontal {
+    transform: translate(-50%,-50%) rotate(90deg);
 }
 
-/* VAGA OCUPADA */
-.vaga.ocupada{
-    border-color:#ff0000;
-    background:rgba(255,0,0,0.5);
+.vaga.ocupada {
+    border-color: #ff0000;
+    background: rgba(255,0,0,0.5);
 }
 
-/* POSIÇÕES DAS VAGAS (COORDENADAS DO CALIBRADOR) */
-#vaga-1 { top: 61.9%; left: 28.97%; }
-#vaga-2 { top: 48.82%; left: 29.04%; }
-#vaga-3 { top: 41.24%; left: 29.04%; }
-#vaga-4 { top: 12.64%; left: 27.97%; }
-#vaga-5 { top: 12.99%; left: 42.13%; }
-#vaga-6 { top: 13.25%; left: 52.49%; }
-#vaga-7 { top: 12.99%; left: 58.54%; }
-#vaga-8 { top: 12.9%; left: 65.05%; }
-#vaga-9 { top: 12.99%; left: 71.23%; }
-#vaga-10 { top: 12.38%; left: 89.97%; }
-#vaga-11 { top: 21.97%; left: 89.97%; }
-#vaga-12 { top: 30.51%; left: 90.23%; }
-#vaga-13 { top: 40.71%; left: 90.17%; }
-#vaga-14 { top: 48.91%; left: 90.5%; }
-#vaga-15 { top: 61.64%; left: 90.7%; }
-#vaga-16 { top: 71.23%; left: 90.96%; }
-#vaga-17 { top: 78.73%; left: 90.83%; }
-#vaga-18 { top: 87.88%; left: 91.3%; }
-#vaga-19 { top: 78.03%; left: 67.31%; }
-#vaga-20 { top: 70.62%; left: 67.31%; }
-#vaga-21 { top: 61.64%; left: 67.91%; }
-#vaga-22 { top: 49.17%; left: 67.57%; }
-#vaga-23 { top: 40.98%; left: 67.24%; }
-#vaga-24 { top: 40.71%; left: 55.95%; }
-#vaga-25 { top: 49.08%; left: 56.41%; }
-#vaga-26 { top: 61.38%; left: 56.15%; }
-#vaga-27 { top: 70.62%; left: 56.28%; }
-#vaga-28 { top: 77.94%; left: 56.08%; }
-#vaga-29 { top: 85.61%; left: 28.04%; }

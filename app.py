@@ -15,7 +15,6 @@ SERIAL_PORT = 'COM3'
 BAUD_RATE = 9600
 TOTAL_VAGAS = 32
 
-# Inicialização do modelo (fora da thread para não recarregar sempre)
 model = YOLO(MODEL_PATH)
 
 # --- THREAD DO ARDUINO ---
@@ -36,7 +35,6 @@ def serial_thread():
 def vision_thread():
     cap = cv2.VideoCapture(0)
     
-    # resolução da câmera para normalizar as coordenadas
     width  = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
     height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
 
@@ -45,32 +43,30 @@ def vision_thread():
         if not ret:
             break
 
-        # Rodar inferência
-        results = model.predict(frame, conf=0.5, verbose=False, stream=True)
+        results = model.predict(frame, conf=0.5, verbose=False)  # CORRIGIDO: sem stream=True
         
         detections = []
         for r in results:
             boxes = r.boxes
             for box in boxes:
                 cls = int(box.cls[0])
-                if cls == 2: 
-                    # coordenadas x, y, w, h
+                if cls == 2:
                     coords = box.xyxy[0].cpu().numpy()
                     
-                    
-                    norm_x = (coords[0] / width) * 100
-                    norm_y = (coords[1] / height) * 100
-                    detections.append({'x': norm_x, 'y': norm_y})
+                    detections.append({
+                        'x': (coords[0] / width) * 100,
+                        'y': (coords[1] / height) * 100,
+                        'w': ((coords[2] - coords[0]) / width) * 100,   # ADICIONADO
+                        'h': ((coords[3] - coords[1]) / height) * 100    # ADICIONADO
+                    })
 
-        # Emitir para o Frontend
         socketio.emit('update_vagas', {
             'ocupadas': len(detections),
             'total': TOTAL_VAGAS,
             'deteccoes': detections
         })
 
-        # Controle de FPS para não sobrecarregar a CPU/GPU
-        time.sleep(0.3) 
+        time.sleep(0.3)
 
     cap.release()
 
@@ -79,12 +75,10 @@ def index():
     return render_template('index.html')
 
 if __name__ == '__main__':
-    # Threads como daemon para encerrarem junto com o programa principal
     t_vision = threading.Thread(target=vision_thread, daemon=True)
     t_serial = threading.Thread(target=serial_thread, daemon=True)
     
     t_vision.start()
     t_serial.start()
     
-    # debug=False para evitar reinicializações duplas
-    socketio.run(app, host='0.0.0.0', port=5000, debug=False)
+    socketio.run(app, host='0.0.0.0', port=5000, debug=False, allow_unsafe_werkzeug=True)  # CORRIGIDO
