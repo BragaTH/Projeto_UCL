@@ -33,16 +33,27 @@ const vagas = [
 ];
 
 const vagasOcupadas = new Set();
+const vagaCarrinho  = new Map(); // guarda qual carrinho cada vaga está usando
+
+// Carrega os carrinhos 
+const imgCarrinhos = [
+    '/static/img/carrinho_ocupado.png',
+].map(src => {
+    const img = new Image();
+    img.src = src;
+    img.onload = desenharVagas;
+    return img;
+});
 
 function desenharVagas() {
     const img    = document.getElementById('estacionamento');
     const canvas = document.getElementById('overlay');
     const rect   = img.getBoundingClientRect();
 
-    canvas.width        = rect.width;
-    canvas.height       = rect.height;
-    canvas.style.left   = img.offsetLeft + 'px';
-    canvas.style.top    = img.offsetTop  + 'px';
+    canvas.width      = rect.width;
+    canvas.height     = rect.height;
+    canvas.style.left = img.offsetLeft + 'px';
+    canvas.style.top  = img.offsetTop  + 'px';
 
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -50,7 +61,7 @@ function desenharVagas() {
     vagas.forEach(v => {
         const cx = (v.x / 100) * rect.width;
         const cy = (v.y / 100) * rect.height;
-        const w  = rect.width  * 0.06;
+        const w  = rect.width  * 0.055;
         const h  = rect.height * 0.10;
         const ocupada = vagasOcupadas.has(v.id);
 
@@ -58,18 +69,27 @@ function desenharVagas() {
         ctx.translate(cx, cy);
         if (v.horizontal) ctx.rotate(Math.PI / 2);
 
+        // Borda da vaga
         ctx.strokeStyle = ocupada ? '#ff0000' : '#00ff00';
-        ctx.fillStyle   = ocupada ? 'rgba(255,0,0,0.5)' : 'rgba(0,255,0,0.2)';
+        ctx.fillStyle   = ocupada ? 'rgba(255,0,0,0.15)' : 'rgba(0,255,0,0.2)';
         ctx.lineWidth   = 2;
         ctx.beginPath();
         ctx.roundRect(-w/2, -h/2, w, h, 4);
         ctx.fill();
         ctx.stroke();
 
-        // número sempre vertical
+        // Carrinho se ocupada
+        if (ocupada) {
+            const imgCarro = vagaCarrinho.get(v.id);
+            if (imgCarro && imgCarro.complete) {
+                ctx.drawImage(imgCarro, -w/2, -h/2, w, h);
+            }
+        }
+
+        // Número sempre vertical
         if (v.horizontal) ctx.rotate(-Math.PI / 2);
         ctx.fillStyle    = 'white';
-        ctx.font         = 'bold 11px monospace';
+        ctx.font         = `bold ${Math.max(9, w * 0.18)}px monospace`;
         ctx.textAlign    = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(v.id, 0, 0);
@@ -87,12 +107,19 @@ document.getElementById('overlay').addEventListener('click', (e) => {
     vagas.forEach(v => {
         const cx = (v.x / 100) * rect.width;
         const cy = (v.y / 100) * rect.height;
-        const w  = rect.width  * 0.06;
-        const h  = rect.height * 0.10;
+        const w  = rect.width  * 0.07;
+        const h  = rect.height * 0.13;
 
         if (mx >= cx - w/2 && mx <= cx + w/2 && my >= cy - h/2 && my <= cy + h/2) {
-            if (vagasOcupadas.has(v.id)) vagasOcupadas.delete(v.id);
-            else vagasOcupadas.add(v.id);
+            if (vagasOcupadas.has(v.id)) {
+                vagasOcupadas.delete(v.id);
+                vagaCarrinho.delete(v.id);
+            } else {
+                vagasOcupadas.add(v.id);
+                // Sorteia um carrinho aleatório
+                const sorteado = imgCarrinhos[Math.floor(Math.random() * imgCarrinhos.length)];
+                vagaCarrinho.set(v.id, sorteado);
+            }
             desenharVagas();
         }
     });
