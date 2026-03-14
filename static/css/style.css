@@ -27,8 +27,8 @@ html, body{
 /* VAGAS */
 .vaga{
     position:absolute;
-    width:3.5%;
-    height:6%;
+    width:6%;
+    height:10%;
     border:2px solid #00ff00;
     background:rgba(0,255,0,0.2);
 
@@ -44,6 +44,9 @@ html, body{
 
     transform:translate(-50%,-50%);
 }
+.vaga-horizontal{
+    transform:translate(-50%,-50%) rotate(90deg);
+}
 
 /* VAGA OCUPADA */
 .vaga.ocupada{
@@ -53,11 +56,9 @@ html, body{
 
 /* POSIÇÕES DAS VAGAS (COORDENADAS DO CALIBRADOR) */
 
-#vaga-1 { top:34.69%; left:11.46%; }
 #vaga-2 { top:35.31%; left:35.83%; }
 #vaga-3 { top:35.16%; left:47.92%; }
 #vaga-4 { top:35.31%; left:55.83%; }
-#vaga-5 { top:28.59%; left:83.75%; }
 #vaga-6 { top:34.69%; left:83.96%; }
 #vaga-7 { top:47.34%; left:83.96%; }
 #vaga-8 { top:56.25%; left:83.96%; }
