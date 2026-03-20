@@ -7,27 +7,85 @@
 </head>
 <body>
 
+    <div id="alerta-lotacao">
+        <span>&#9888; estacionamento lotado — sem vagas disponíveis</span>
+        <button onclick="fecharAlerta()">✕</button>
+    </div>
+
     <header id="topbar">
         <div id="logo">SMART<span>PARK</span> UCL</div>
         <div id="status-pill">
             <div class="dot"></div>
             sistema ativo — câmera 01
         </div>
-        <div id="datetime">
-            <span id="data"></span>
-            &nbsp;|&nbsp;
-            <span id="hora"></span>
+        <div style="display:flex; align-items:center; gap:14px;">
+            <div id="datetime">
+                <span id="data"></span>
+                &nbsp;|&nbsp;
+                <span id="hora"></span>
+            </div>
+            <button id="btn-painel" onclick="togglePainel()">&#9776; Painel</button>
         </div>
     </header>
 
-    <div id="maquete-container">
-        <img src="/static/img/estacionamento.png" id="estacionamento">
-        <canvas id="overlay"></canvas>
+    <div id="main-layout">
+
+        <div id="maquete-container">
+            <img src="/static/img/estacionamento.png" id="estacionamento">
+            <canvas id="overlay"></canvas>
+        </div>
+
+        <div id="painel" class="painel-fechado">
+
+            <div class="card">
+                <div class="card-title">disponibilidade</div>
+                <div class="vagas-count">
+                    <span id="vagas-livres-num">29</span>
+                    <span class="vagas-total">/ 29 vagas</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+                <div class="vagas-label">
+                    <span id="vagas-livres-label">29 livres</span> · <span id="vagas-ocupadas-label">0 ocupadas</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">visão superior — câmera 01</div>
+                <div class="cam-box">
+                    <div class="cam-corner tl"></div>
+                    <div class="cam-corner tr"></div>
+                    <div class="cam-corner bl"></div>
+                    <div class="cam-corner br"></div>
+                    <span class="cam-label">ao vivo</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">mapa de vagas</div>
+                <div id="mapa-vagas-grid"></div>
+                <div class="legenda">
+                    <span class="leg-item"><span class="leg-cor livre"></span>livre</span>
+                    <span class="leg-item"><span class="leg-cor ocupada"></span>ocupada</span>
+                </div>
+            </div>
+
+            <div class="card card-historico">
+                <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;">
+                    <span>histórico de eventos</span>
+                    <button onclick="limparHistorico()" style="background:none;border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.3);font-family:monospace;font-size:9px;padding:2px 7px;border-radius:4px;cursor:pointer;letter-spacing:1px;">limpar</button>
+                </div>
+                <div id="historico-lista"></div>
+            </div>
+
+        </div>
     </div>
 
     <script src="/static/js/main.js"></script>
 
     <script>
+        // Relógio
         function atualizarRelogio() {
             const agora = new Date();
             const data = agora.toLocaleDateString('pt-BR', { weekday:'long', day:'2-digit', month:'long', year:'numeric' });
@@ -37,6 +95,151 @@
         }
         atualizarRelogio();
         setInterval(atualizarRelogio, 1000);
+
+        // Toggle painel
+        function togglePainel() {
+            const painel = document.getElementById('painel');
+            painel.classList.toggle('painel-fechado');
+            painel.classList.toggle('painel-aberto');
+        }
+
+        // Mapa de vagas
+        function gerarMapaVagas() {
+            const grid = document.getElementById('mapa-vagas-grid');
+            grid.innerHTML = '';
+            for (let i = 1; i <= 29; i++) {
+                const div = document.createElement('div');
+                div.className = 'mv livre';
+                div.id = 'mv-' + i;
+                div.textContent = i;
+                grid.appendChild(div);
+            }
+        }
+        gerarMapaVagas();
+
+        // ===== HISTÓRICO COM LOCALSTORAGE =====
+        const MAX_EVENTOS = 50;
+
+        function carregarHistorico() {
+            try {
+                return JSON.parse(localStorage.getItem('smartpark_historico') || '[]');
+            } catch(e) {
+                return [];
+            }
+        }
+
+        function guardarHistorico(eventos) {
+            try {
+                localStorage.setItem('smartpark_historico', JSON.stringify(eventos));
+            } catch(e) {}
+        }
+
+        function limparHistorico() {
+            localStorage.removeItem('smartpark_historico');
+            historicoEventos.length = 0;
+            atualizarHistorico();
+        }
+
+        // Inicializa com o que estava guardado
+        const historicoEventos = carregarHistorico();
+
+        function registarEvento(vagaId, tipo) {
+            const agora = new Date();
+            const hora = agora.toLocaleTimeString('pt-BR');
+            const data = agora.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' });
+            historicoEventos.unshift({ hora, data, vagaId, tipo });
+            if (historicoEventos.length > MAX_EVENTOS) historicoEventos.pop();
+            guardarHistorico(historicoEventos);
+            atualizarHistorico();
+        }
+
+        function atualizarHistorico() {
+            const lista = document.getElementById('historico-lista');
+            if (!lista) return;
+            lista.innerHTML = '';
+
+            if (historicoEventos.length === 0) {
+                lista.innerHTML = '<div style="font-family:monospace;font-size:10px;color:rgba(255,255,255,0.2);padding:8px 0;text-align:center;">sem eventos registados</div>';
+                return;
+            }
+
+            historicoEventos.forEach(ev => {
+                const div = document.createElement('div');
+                div.className = 'ev-item';
+                if (ev.tipo === 'arduino') {
+                    div.style.borderLeftColor = '#f5c518';
+                    div.innerHTML = `
+                        <span class="ev-hora">${ev.data} ${ev.hora}</span>
+                        <span class="ev-msg" style="color:#f5c518">cancela ativada</span>
+                    `;
+                } else {
+                    div.style.borderLeftColor = ev.tipo === 'ocupada' ? '#dc3c3c' : '#3aaf5c';
+                    div.innerHTML = `
+                        <span class="ev-hora">${ev.data} ${ev.hora}</span>
+                        <span class="ev-msg">vaga ${ev.vagaId}</span>
+                        <span class="ev-badge ${ev.tipo}">${ev.tipo === 'ocupada' ? '●' : '○'}</span>
+                    `;
+                }
+                lista.appendChild(div);
+            });
+        }
+
+        // Carrega histórico ao abrir
+        atualizarHistorico();
+
+        // Alerta lotação
+        let alertaAtivo = false;
+
+        function fecharAlerta() {
+            document.getElementById('alerta-lotacao').classList.remove('alerta-visivel');
+            alertaAtivo = false;
+        }
+
+        function atualizarPainel() {
+            const total = 29;
+            const ocupadas = vagasOcupadas.size;
+            const livres = total - ocupadas;
+            const pct = (ocupadas / total) * 100;
+
+            document.getElementById('vagas-livres-num').textContent = livres;
+            document.getElementById('vagas-livres-label').textContent = livres + ' livres';
+            document.getElementById('vagas-ocupadas-label').textContent = ocupadas + ' ocupadas';
+            document.getElementById('progress-fill').style.width = pct + '%';
+            document.getElementById('progress-fill').style.background = ocupadas >= total ? '#dc3c3c' : ocupadas > 20 ? '#f5c518' : '#3aaf5c';
+
+            for (let i = 1; i <= total; i++) {
+                const mv = document.getElementById('mv-' + i);
+                if (mv) mv.className = 'mv ' + (vagasOcupadas.has(i) ? 'ocupada' : 'livre');
+            }
+
+            const alerta = document.getElementById('alerta-lotacao');
+            if (ocupadas >= total && !alertaAtivo) {
+                alerta.classList.add('alerta-visivel');
+                alertaAtivo = true;
+                try {
+                    const actx = new (window.AudioContext || window.webkitAudioContext)();
+                    [0, 0.3, 0.6].forEach(t => {
+                        const o = actx.createOscillator();
+                        const g = actx.createGain();
+                        o.connect(g); g.connect(actx.destination);
+                        o.frequency.value = 880;
+                        g.gain.setValueAtTime(0.3, actx.currentTime + t);
+                        g.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + t + 0.2);
+                        o.start(actx.currentTime + t);
+                        o.stop(actx.currentTime + t + 0.2);
+                    });
+                } catch(e) {}
+            } else if (ocupadas < total) {
+                alerta.classList.remove('alerta-visivel');
+                alertaAtivo = false;
+            }
+        }
+
+        const _desenharOriginal = desenharVagas;
+        window.desenharVagas = function() {
+            _desenharOriginal();
+            atualizarPainel();
+        }
     </script>
 
 </body>

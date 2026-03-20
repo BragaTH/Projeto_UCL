@@ -33,9 +33,8 @@ const vagas = [
 ];
 
 const vagasOcupadas = new Set();
-const vagaCarrinho  = new Map(); // guarda qual carrinho cada vaga está usando
+const vagaCarrinho  = new Map();
 
-// Carrega os carrinhos 
 const imgCarrinhos = [
     '/static/img/carrinho_ocupado.png',
 ].map(src => {
@@ -69,7 +68,6 @@ function desenharVagas() {
         ctx.translate(cx, cy);
         if (v.horizontal) ctx.rotate(Math.PI / 2);
 
-        // Borda da vaga
         ctx.strokeStyle = ocupada ? '#ff0000' : '#00ff00';
         ctx.fillStyle   = ocupada ? 'rgba(255,0,0,0.15)' : 'rgba(0,255,0,0.2)';
         ctx.lineWidth   = 2;
@@ -78,7 +76,6 @@ function desenharVagas() {
         ctx.fill();
         ctx.stroke();
 
-        // Carrinho se ocupada
         if (ocupada) {
             const imgCarro = vagaCarrinho.get(v.id);
             if (imgCarro && imgCarro.complete) {
@@ -86,7 +83,6 @@ function desenharVagas() {
             }
         }
 
-        // Número sempre vertical
         if (v.horizontal) ctx.rotate(-Math.PI / 2);
         ctx.fillStyle    = 'white';
         ctx.font         = `bold ${Math.max(9, w * 0.18)}px monospace`;
@@ -96,6 +92,8 @@ function desenharVagas() {
 
         ctx.restore();
     });
+
+    if (typeof atualizarPainel === 'function') atualizarPainel();
 }
 
 document.getElementById('overlay').addEventListener('click', (e) => {
@@ -114,11 +112,12 @@ document.getElementById('overlay').addEventListener('click', (e) => {
             if (vagasOcupadas.has(v.id)) {
                 vagasOcupadas.delete(v.id);
                 vagaCarrinho.delete(v.id);
+                if (typeof registarEvento === 'function') registarEvento(v.id, 'livre');
             } else {
                 vagasOcupadas.add(v.id);
-                // Sorteia um carrinho aleatório
                 const sorteado = imgCarrinhos[Math.floor(Math.random() * imgCarrinhos.length)];
                 vagaCarrinho.set(v.id, sorteado);
+                if (typeof registarEvento === 'function') registarEvento(v.id, 'ocupada');
             }
             desenharVagas();
         }
@@ -132,7 +131,7 @@ socket.on('update_vagas', (data) => {
 });
 
 socket.on('evento_arduino', (data) => {
-    alert(data.msg);
+    if (typeof registarEvento === 'function') registarEvento('cancela', 'arduino');
 });
 
 window.addEventListener('resize', desenharVagas);

@@ -7,11 +7,51 @@ html, body {
         radial-gradient(ellipse at 80% 50%, rgba(15,30,50,0.5) 0%, transparent 60%);
     background-attachment: fixed;
     min-height: 100vh;
+    height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
     padding-top: 16px;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+/* ALERTA LOTAÇÃO */
+#alerta-lotacao {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    background: rgba(180,20,20,0.95);
+    color: #fff;
+    font-family: monospace;
+    font-size: 13px;
+    letter-spacing: 1px;
+    padding: 10px 20px;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #ff4444;
+    animation: piscar 1s ease-in-out infinite;
+}
+
+#alerta-lotacao.alerta-visivel {
+    display: flex;
+}
+
+#alerta-lotacao button {
+    background: none;
+    border: 1px solid rgba(255,255,255,0.4);
+    color: #fff;
+    font-size: 13px;
+    padding: 2px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+@keyframes piscar {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.85; }
 }
 
 #topbar {
@@ -25,6 +65,8 @@ html, body {
     border-radius: 8px;
     padding: 12px 20px;
     margin-bottom: 12px;
+    flex-shrink: 0;
+    box-sizing: border-box;
 }
 
 #logo {
@@ -36,9 +78,7 @@ html, body {
     text-transform: uppercase;
 }
 
-#logo span {
-    color: #3aaf5c;
-}
+#logo span { color: #3aaf5c; }
 
 #status-pill {
     display: flex;
@@ -70,18 +110,45 @@ html, body {
     letter-spacing: 1px;
 }
 
-#maquete-container {
-    position: relative;
+#btn-painel {
+    background: rgba(58,175,92,0.15);
+    border: 1px solid rgba(58,175,92,0.4);
+    color: #3aaf5c;
+    font-family: monospace;
+    font-size: 12px;
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: background .2s;
+}
+
+#btn-painel:hover { background: rgba(58,175,92,0.3); }
+
+/* LAYOUT PRINCIPAL */
+#main-layout {
     width: 90vw;
     max-width: 1400px;
     display: flex;
-    justify-content: center;
+    gap: 14px;
+    flex: 1;
+    min-height: 0;
+    align-items: stretch;
+}
+
+/* MAQUETE */
+#maquete-container {
+    position: relative;
+    flex: 1;
     line-height: 0;
+    min-height: 0;
+    display: flex;
+    align-items: flex-start;
 }
 
 #estacionamento {
     max-width: 100%;
-    max-height: 82vh;
+    max-height: calc(100vh - 90px);
     width: auto;
     height: auto;
     display: block;
@@ -89,8 +156,255 @@ html, body {
 
 #overlay {
     position: absolute;
-    top: 0;
-    left: 0;
-    pointer-events: auto; 
+    top: 0; left: 0;
+    pointer-events: auto;
     cursor: pointer;
 }
+
+/* PAINEL LATERAL — corrigido */
+#painel {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: width .3s ease, opacity .3s ease;
+    max-height: calc(100vh - 90px);
+}
+
+.painel-fechado {
+    width: 0;
+    opacity: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.painel-aberto {
+    width: 270px;
+    opacity: 1;
+    pointer-events: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.1) transparent;
+}
+
+.painel-aberto::-webkit-scrollbar { width: 4px; }
+.painel-aberto::-webkit-scrollbar-track { background: transparent; }
+.painel-aberto::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.1);
+    border-radius: 2px;
+}
+
+/* CARDS */
+.card {
+    background: rgba(0,0,0,0.55);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    padding: 10px 14px;
+    width: 270px;
+    box-sizing: border-box;
+    flex-shrink: 0;
+}
+
+/* Card histórico */
+.card-historico {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 150px;
+}
+
+.card-title {
+    font-family: monospace;
+    font-size: 10px;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    flex-shrink: 0;
+}
+
+/* Disponibilidade */
+.vagas-count {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    margin-bottom: 4px;
+}
+
+#vagas-livres-num {
+    font-size: 32px;
+    font-weight: 700;
+    color: #3aaf5c;
+    line-height: 1;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.vagas-total {
+    font-size: 13px;
+    color: rgba(255,255,255,0.3);
+    font-family: monospace;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 4px;
+    background: rgba(255,255,255,0.07);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 4px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: #3aaf5c;
+    border-radius: 3px;
+    width: 0%;
+    transition: width .5s ease, background .5s ease;
+}
+
+.vagas-label {
+    font-family: monospace;
+    font-size: 10px;
+    color: rgba(255,255,255,0.3);
+}
+
+/* Câmera */
+.cam-box {
+    width: 100%;
+    height: 100px;
+    background: #1a1a1a;
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.06);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cam-label {
+    font-family: monospace;
+    font-size: 10px;
+    color: rgba(255,255,255,0.2);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+.cam-corner {
+    position: absolute;
+    width: 10px; height: 10px;
+    border-color: #3aaf5c;
+    border-style: solid;
+    opacity: 0.6;
+}
+.cam-corner.tl { top:5px;    left:5px;  border-width:2px 0 0 2px; }
+.cam-corner.tr { top:5px;    right:5px; border-width:2px 2px 0 0; }
+.cam-corner.bl { bottom:5px; left:5px;  border-width:0 0 2px 2px; }
+.cam-corner.br { bottom:5px; right:5px; border-width:0 2px 2px 0; }
+
+/* Mapa de vagas */
+#mapa-vagas-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 4px;
+    margin-bottom: 6px;
+    align-content: start;
+}
+
+.mv {
+    aspect-ratio: 1;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: monospace;
+    font-size: 10px;
+    font-weight: 700;
+    border: 1px solid;
+    transition: background .3s, border-color .3s;
+}
+
+.mv.livre {
+    background: rgba(58,175,92,0.2);
+    border-color: rgba(58,175,92,0.6);
+    color: #3aaf5c;
+}
+
+.mv.ocupada {
+    background: rgba(220,60,60,0.25);
+    border-color: rgba(220,60,60,0.7);
+    color: #dc3c3c;
+}
+
+.legenda {
+    display: flex;
+    gap: 14px;
+    flex-shrink: 0;
+}
+
+.leg-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: monospace;
+    font-size: 10px;
+    color: rgba(255,255,255,0.35);
+}
+
+.leg-cor {
+    width: 10px; height: 10px;
+    border-radius: 2px;
+}
+
+.leg-cor.livre   { background: rgba(58,175,92,0.5); border: 1px solid #3aaf5c; }
+.leg-cor.ocupada { background: rgba(220,60,60,0.5); border: 1px solid #dc3c3c; }
+
+/* Histórico */
+#historico-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 180px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.1) transparent;
+}
+
+#historico-lista::-webkit-scrollbar { width: 3px; }
+#historico-lista::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.1);
+    border-radius: 2px;
+}
+
+.ev-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 8px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 5px;
+    border-left: 2px solid rgba(255,255,255,0.1);
+    flex-shrink: 0;
+}
+
+.ev-hora {
+    font-family: monospace;
+    font-size: 9px;
+    color: rgba(255,255,255,0.25);
+    min-width: 54px;
+}
+
+.ev-msg {
+    font-family: monospace;
+    font-size: 11px;
+    color: rgba(255,255,255,0.5);
+    flex: 1;
+}
+
+.ev-badge { font-size: 11px; }
+.ev-badge.ocupada { color: #dc3c3c; }
+.ev-badge.livre   { color: #3aaf5c; }
+
+.ev-arduino { color: #f5c518 !important; }
+
+.ev-item:has(.ev-arduino) { border-left-color: #f5c518; }
