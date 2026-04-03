@@ -15,9 +15,11 @@ SERIAL_PORT = 'COM3'
 BAUD_RATE = 9600
 # Intervalo entre leituras da câmera (segundos)
 VISION_INTERVAL = 0.2
+total_carros = 0
 
 # --- THREAD DO ARDUINO ---
 def serial_thread():
+    global total_carros
     try:
         ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1)
         print(f"Conectado ao Arduino na porta {SERIAL_PORT}")
@@ -26,6 +28,22 @@ def serial_thread():
                 linha = ser.readline().decode('utf-8', errors='ignore').strip()
                 if "ENTRADA" in linha:
                     socketio.emit('evento_arduino', {'tipo': 'entrada', 'msg': 'Carro detectado na cancela!'})
+                try:
+                    if linha.startswith("ENTRADA:"):
+                        valor = int(linha.split(":", 1)[1].strip())
+                        total_carros += valor
+                        if total_carros < 0:
+                            total_carros = 0
+                        socketio.emit("contador_carros", {"total": total_carros})
+                    elif linha.startswith("SAIDA:"):
+                        valor = int(linha.split(":", 1)[1].strip())
+                        total_carros -= valor
+                        if total_carros < 0:
+                            total_carros = 0
+                        socketio.emit("contador_carros", {"total": total_carros})
+                except (ValueError, IndexError):
+                    # Ignora linhas inesperadas da serial sem interromper a thread.
+                    pass
             time.sleep(0.1)
     except Exception as e:
         print("Aviso: Arduino não detectado. O sistema de visão continuará funcionando.")

@@ -149,6 +149,15 @@ socket.on('evento_arduino', (data) => {
     if (typeof registarEvento === 'function') registarEvento('cancela', 'arduino');
 });
 
+socket.on('contador_carros', (data) => {
+    const total = Number(data && data.total);
+    const valor = Number.isFinite(total) && total >= 0 ? String(total) : '0';
+    const elPainel = document.getElementById('total-carros-num');
+    const elTopo = document.getElementById('total-carros-topo-num');
+    if (elPainel) elPainel.textContent = valor;
+    if (elTopo) elTopo.textContent = valor;
+});
+
 window.addEventListener('resize', desenharVagas);
 document.getElementById('estacionamento').addEventListener('load', desenharVagas);
 desenharVagas();

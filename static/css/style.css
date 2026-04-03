@@ -110,6 +110,32 @@ html, body {
     letter-spacing: 1px;
 }
 
+#contador-carros-topo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(0, 220, 255, 0.45);
+    background: rgba(0, 220, 255, 0.08);
+    font-family: monospace;
+}
+
+.contador-carros-label {
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: rgba(170, 245, 255, 0.9);
+    text-transform: uppercase;
+}
+
+#total-carros-topo-num {
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1;
+    color: #00e6ff;
+    text-shadow: 0 0 8px rgba(0, 230, 255, 0.4);
+}
+
 #btn-painel {
     background: rgba(58,175,92,0.15);
     border: 1px solid rgba(58,175,92,0.4);
@@ -267,6 +293,20 @@ html, body {
     font-family: monospace;
     font-size: 10px;
     color: rgba(255,255,255,0.3);
+}
+
+.contador-carros-discreto {
+    margin-top: 6px;
+    font-family: monospace;
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: rgba(255,255,255,0.22);
+    text-transform: lowercase;
+}
+
+#total-carros-num {
+    color: rgba(255,255,255,0.35);
+    font-weight: 700;
 }
 
 /* Câmera */
