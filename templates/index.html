@@ -28,13 +28,34 @@
                 &nbsp;|&nbsp;
                 <span id="hora"></span>
             </div>
+            <button type="button" id="btn-config" class="btn-config" onclick="abrirConfig()" title="Configurações">&#9881;</button>
             <button id="btn-painel" onclick="togglePainel()">&#9776; Painel</button>
         </div>
     </header>
 
+    <div id="modal-config" class="modal-config" aria-hidden="true">
+        <div class="modal-config-backdrop" onclick="fecharConfig()"></div>
+        <div class="modal-config-panel" role="dialog" aria-labelledby="modal-config-titulo">
+            <div class="modal-config-header">
+                <h2 id="modal-config-titulo">Configurações</h2>
+                <button type="button" class="modal-config-close" onclick="fecharConfig()" aria-label="Fechar">&times;</button>
+            </div>
+            <div class="modal-config-body">
+                <h3 class="modal-config-section-title">Estabilidade de detecção</h3>
+                <p class="modal-config-desc">Tempo mínimo para confirmar ocupação/liberação de vaga</p>
+                <div class="estab-options" id="estab-options">
+                    <label class="estab-option"><input type="radio" name="estab" value="3"><span>3 segundos</span></label>
+                    <label class="estab-option"><input type="radio" name="estab" value="5"><span>5 segundos</span></label>
+                    <label class="estab-option"><input type="radio" name="estab" value="8"><span>8 segundos</span></label>
+                    <label class="estab-option"><input type="radio" name="estab" value="10"><span>10 segundos</span></label>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="main-layout">
 
-        <div id="maquete-container">
+        <div id="maquete-container" title="Clique numa vaga para interditar ou remover interdição">
             <img src="/static/img/estacionamento.png" id="estacionamento">
             <canvas id="overlay"></canvas>
         </div>
@@ -53,6 +74,7 @@
                 <div class="vagas-label">
                     <span id="vagas-livres-label">24 livres</span> · <span id="vagas-ocupadas-label">0 ocupadas</span>
                 </div>
+                <div class="vagas-meta" id="vagas-meta"></div>
                 <div class="contador-carros-discreto">
                     fluxo total: <span id="total-carros-num">0</span>
                 </div>
@@ -72,9 +94,10 @@
             <div class="card">
                 <div class="card-title">mapa de vagas</div>
                 <div id="mapa-vagas-grid"></div>
-                <div class="legenda">
+                <div class="legenda legenda-wrap">
                     <span class="leg-item"><span class="leg-cor livre"></span>livre</span>
                     <span class="leg-item"><span class="leg-cor ocupada"></span>ocupada</span>
+                    <span class="leg-item"><span class="leg-cor interditada"></span>interditada</span>
                 </div>
             </div>
 
@@ -119,10 +142,34 @@
                 div.className = 'mv livre';
                 div.id = 'mv-' + i;
                 div.textContent = i;
+                div.title = 'Clique para interditar';
                 grid.appendChild(div);
             }
         }
         gerarMapaVagas();
+
+        function abrirConfig() {
+            const m = document.getElementById('modal-config');
+            if (m) { m.classList.add('modal-config--aberto'); m.setAttribute('aria-hidden', 'false'); }
+        }
+        function fecharConfig() {
+            const m = document.getElementById('modal-config');
+            if (m) { m.classList.remove('modal-config--aberto'); m.setAttribute('aria-hidden', 'true'); }
+        }
+        (function initEstabilidade() {
+            const salvo = (typeof window.getEstabilidadeSegundos === 'function')
+                ? window.getEstabilidadeSegundos()
+                : parseInt(localStorage.getItem('smartpark_estabilidade_seg') || '5', 10);
+            const val = [3, 5, 8, 10].includes(salvo) ? salvo : 5;
+            document.querySelectorAll('input[name="estab"]').forEach(function (inp) {
+                inp.checked = parseInt(inp.value, 10) === val;
+                inp.addEventListener('change', function () {
+                    if (inp.checked) {
+                        try { localStorage.setItem('smartpark_estabilidade_seg', inp.value); } catch (e) {}
+                    }
+                });
+            });
+        })();
 
         // ===== HISTÓRICO COM LOCALSTORAGE =====
         const MAX_EVENTOS = 50;
@@ -206,27 +253,44 @@
             const total = typeof window.totalVagasPainel === 'number' && window.totalVagasPainel > 0
                 ? window.totalVagasPainel
                 : 24;
+            const setInter = window.vagasInterditadas;
+            let nInter = 0;
+            if (setInter) {
+                for (let i = 1; i <= total; i++) {
+                    if (setInter.has(i)) nInter++;
+                }
+            }
+            const vagasAtivas = Math.max(0, total - nInter);
             const ocupadas = vagasOcupadas.size;
-            const livres = total - ocupadas;
-            const pct = total > 0 ? (ocupadas / total) * 100 : 0;
-            const avisoAmarelo = total > 0 ? ocupadas > Math.floor(total * 0.69) : false;
+            const livres = vagasAtivas - ocupadas;
+            const pct = vagasAtivas > 0 ? (ocupadas / vagasAtivas) * 100 : 0;
+            const avisoAmarelo = vagasAtivas > 0 ? ocupadas > Math.floor(vagasAtivas * 0.69) : false;
 
             document.getElementById('vagas-livres-num').textContent = livres;
             const elTotal = document.querySelector('.vagas-total');
             if (elTotal) elTotal.textContent = '/ ' + total + ' vagas';
             document.getElementById('vagas-livres-label').textContent = livres + ' livres';
             document.getElementById('vagas-ocupadas-label').textContent = ocupadas + ' ocupadas';
+            const meta = document.getElementById('vagas-meta');
+            if (meta) {
+                meta.textContent = nInter > 0
+                    ? (nInter + ' interditada(s) · ' + vagasAtivas + ' vagas ativas')
+                    : (vagasAtivas + ' vagas ativas');
+            }
             document.getElementById('progress-fill').style.width = pct + '%';
-            document.getElementById('progress-fill').style.background = ocupadas >= total ? '#dc3c3c' : avisoAmarelo ? '#f5c518' : '#3aaf5c';
+            document.getElementById('progress-fill').style.background = ocupadas >= vagasAtivas && vagasAtivas > 0 ? '#dc3c3c' : avisoAmarelo ? '#f5c518' : '#3aaf5c';
 
             const mapSlots = Math.min(total, 24);
             for (let i = 1; i <= mapSlots; i++) {
                 const mv = document.getElementById('mv-' + i);
-                if (mv) mv.className = 'mv ' + (vagasOcupadas.has(i) ? 'ocupada' : 'livre');
+                if (!mv) continue;
+                if (setInter && setInter.has(i)) mv.className = 'mv interditada';
+                else if (vagasOcupadas.has(i)) mv.className = 'mv ocupada';
+                else mv.className = 'mv livre';
             }
 
             const alerta = document.getElementById('alerta-lotacao');
-            if (ocupadas >= total && !alertaAtivo) {
+            if (vagasAtivas > 0 && ocupadas >= vagasAtivas && !alertaAtivo) {
                 alerta.classList.add('alerta-visivel');
                 alertaAtivo = true;
                 try {
@@ -242,7 +306,7 @@
                         o.stop(actx.currentTime + t + 0.2);
                     });
                 } catch(e) {}
-            } else if (ocupadas < total) {
+            } else if (ocupadas < vagasAtivas || vagasAtivas === 0) {
                 alerta.classList.remove('alerta-visivel');
                 alertaAtivo = false;
             }
@@ -252,7 +316,8 @@
         window.desenharVagas = function() {
             _desenharOriginal();
             atualizarPainel();
-        }
+        };
+        window.desenharVagas();
     </script>
 
 </body>

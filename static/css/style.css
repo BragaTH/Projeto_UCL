@@ -136,6 +136,23 @@ html, body {
     text-shadow: 0 0 8px rgba(0, 230, 255, 0.4);
 }
 
+.btn-config {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(58,175,92,0.35);
+    color: rgba(58,175,92,0.95);
+    font-size: 16px;
+    line-height: 1;
+    padding: 6px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background .2s, border-color .2s, transform .15s ease;
+}
+.btn-config:hover {
+    background: rgba(58,175,92,0.18);
+    border-color: rgba(58,175,92,0.55);
+    transform: rotate(15deg);
+}
+
 #btn-painel {
     background: rgba(58,175,92,0.15);
     border: 1px solid rgba(58,175,92,0.4);
@@ -150,6 +167,120 @@ html, body {
 }
 
 #btn-painel:hover { background: rgba(58,175,92,0.3); }
+
+/* Modal configurações */
+.modal-config {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 16px;
+    box-sizing: border-box;
+}
+.modal-config.modal-config--aberto {
+    display: flex;
+}
+.modal-config-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(2px);
+}
+.modal-config-panel {
+    position: relative;
+    width: 100%;
+    max-width: 340px;
+    max-height: calc(100vh - 32px);
+    overflow: auto;
+    background: rgba(12,14,12,0.97);
+    border: 1px solid rgba(58,175,92,0.25);
+    border-radius: 12px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+    animation: modal-slide-in .25s ease;
+}
+@keyframes modal-slide-in {
+    from { opacity: 0; transform: translateX(12px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+.modal-config-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.modal-config-header h2 {
+    margin: 0;
+    font-family: monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.45);
+}
+.modal-config-close {
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.35);
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 4px;
+}
+.modal-config-close:hover { color: #fff; }
+.modal-config-body { padding: 16px 18px 20px; }
+.modal-config-section-title {
+    margin: 0 0 6px;
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.88);
+}
+.modal-config-desc {
+    margin: 0 0 14px;
+    font-size: 11px;
+    line-height: 1.45;
+    color: rgba(255,255,255,0.38);
+}
+.estab-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.estab-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.03);
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+}
+.estab-option:hover {
+    border-color: rgba(58,175,92,0.35);
+    background: rgba(58,175,92,0.06);
+}
+.estab-option input {
+    accent-color: #3aaf5c;
+    margin: 0;
+}
+.estab-option input:checked + span {
+    color: #3aaf5c;
+    font-weight: 600;
+}
+.estab-option span {
+    font-family: monospace;
+    font-size: 12px;
+    color: rgba(255,255,255,0.55);
+    letter-spacing: 0.5px;
+}
+.estab-option:has(input:checked) {
+    border-color: rgba(58,175,92,0.45);
+    background: rgba(58,175,92,0.1);
+}
 
 /* LAYOUT PRINCIPAL */
 #main-layout {
@@ -186,6 +317,8 @@ html, body {
     pointer-events: auto;
     cursor: pointer;
 }
+
+#maquete-container { cursor: pointer; }
 
 /* PAINEL LATERAL — corrigido */
 #painel {
@@ -295,6 +428,14 @@ html, body {
     color: rgba(255,255,255,0.3);
 }
 
+.vagas-meta {
+    margin-top: 4px;
+    font-family: monospace;
+    font-size: 9px;
+    color: rgba(255,255,255,0.22);
+    letter-spacing: 0.5px;
+}
+
 .contador-carros-discreto {
     margin-top: 6px;
     font-family: monospace;
@@ -376,10 +517,26 @@ html, body {
     color: #dc3c3c;
 }
 
+.mv.interditada {
+    background: rgba(255, 200, 0, 0.22);
+    border-color: #ffc800;
+    color: #ffe08a;
+    box-shadow: inset 0 0 0 1px rgba(255, 200, 0, 0.35);
+    animation: mv-inter-pulse 2.4s ease-in-out infinite;
+}
+@keyframes mv-inter-pulse {
+    0%, 100% { filter: brightness(1); }
+    50% { filter: brightness(1.12); }
+}
+
 .legenda {
     display: flex;
     gap: 14px;
     flex-shrink: 0;
+}
+.legenda-wrap {
+    flex-wrap: wrap;
+    gap: 8px 14px;
 }
 
 .leg-item {
@@ -398,6 +555,7 @@ html, body {
 
 .leg-cor.livre   { background: rgba(58,175,92,0.5); border: 1px solid #3aaf5c; }
 .leg-cor.ocupada { background: rgba(220,60,60,0.5); border: 1px solid #dc3c3c; }
+.leg-cor.interditada { background: rgba(255, 200, 0, 0.45); border: 1px solid #ffc800; }
 
 /* Histórico */
 #historico-lista {

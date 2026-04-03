@@ -30,7 +30,37 @@ const vagas = [
 const vagasOcupadas = new Set();
 const vagaCarrinho  = new Map();
 
+const LS_INTERDITADAS = 'smartpark_interditadas';
+const LS_ESTABILIDADE = 'smartpark_estabilidade_seg';
+
+function carregarInterditadas() {
+    try {
+        const arr = JSON.parse(localStorage.getItem(LS_INTERDITADAS) || '[]');
+        return new Set(
+            arr
+                .map((x) => parseInt(x, 10))
+                .filter((n) => !Number.isNaN(n) && n >= 1 && n <= 24)
+        );
+    } catch (e) {
+        return new Set();
+    }
+}
+
+function guardarInterditadas(set) {
+    try {
+        localStorage.setItem(LS_INTERDITADAS, JSON.stringify([...set].sort((a, b) => a - b)));
+    } catch (e) {}
+}
+
+const vagasInterditadas = carregarInterditadas();
+window.vagasInterditadas = vagasInterditadas;
+
 window.totalVagasPainel = 24;
+
+window.getEstabilidadeSegundos = function () {
+    const v = parseInt(localStorage.getItem(LS_ESTABILIDADE) || '5', 10);
+    return [3, 5, 8, 10].includes(v) ? v : 5;
+};
 
 const imgCarrinhos = [
     '/static/img/carrinho_ocupado.png',
@@ -59,15 +89,22 @@ function desenharVagas() {
         const cy = (v.y / 100) * rect.height;
         const w  = rect.width  * 0.055;
         const h  = rect.height * 0.10;
-        const ocupada = vagasOcupadas.has(v.id);
+        const interditada = vagasInterditadas.has(v.id);
+        const ocupada = !interditada && vagasOcupadas.has(v.id);
 
         ctx.save();
         ctx.translate(cx, cy);
         if (v.horizontal) ctx.rotate(Math.PI / 2);
 
-        ctx.strokeStyle = ocupada ? '#ff0000' : '#00ff00';
-        ctx.fillStyle   = ocupada ? 'rgba(255,0,0,0.15)' : 'rgba(0,255,0,0.2)';
-        ctx.lineWidth   = 2;
+        if (interditada) {
+            ctx.strokeStyle = '#ffc800';
+            ctx.fillStyle = 'rgba(255, 200, 0, 0.4)';
+            ctx.lineWidth = 3;
+        } else {
+            ctx.strokeStyle = ocupada ? '#ff0000' : '#00ff00';
+            ctx.fillStyle = ocupada ? 'rgba(255,0,0,0.15)' : 'rgba(0,255,0,0.2)';
+            ctx.lineWidth = 2;
+        }
         ctx.beginPath();
         ctx.roundRect(-w/2, -h/2, w, h, 4);
         ctx.fill();
@@ -81,11 +118,16 @@ function desenharVagas() {
         }
 
         if (v.horizontal) ctx.rotate(-Math.PI / 2);
-        ctx.fillStyle    = 'white';
-        ctx.font         = `bold ${Math.max(9, w * 0.18)}px monospace`;
-        ctx.textAlign    = 'center';
+        ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(v.id, 0, 0);
+        if (interditada) {
+            ctx.font = `${Math.max(12, w * 0.22)}px "Segoe UI Emoji", "Apple Color Emoji", sans-serif`;
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+            ctx.fillText('\uD83D\uDEA7', 0, -h * 0.14);
+        }
+        ctx.fillStyle = 'white';
+        ctx.font = `bold ${Math.max(9, w * 0.18)}px monospace`;
+        ctx.fillText(v.id, 0, interditada ? h * 0.1 : 0);
 
         ctx.restore();
     });
@@ -106,16 +148,14 @@ document.getElementById('overlay').addEventListener('click', (e) => {
         const h  = rect.height * 0.13;
 
         if (mx >= cx - w/2 && mx <= cx + w/2 && my >= cy - h/2 && my <= cy + h/2) {
-            if (vagasOcupadas.has(v.id)) {
+            if (vagasInterditadas.has(v.id)) {
+                vagasInterditadas.delete(v.id);
+            } else {
+                vagasInterditadas.add(v.id);
                 vagasOcupadas.delete(v.id);
                 vagaCarrinho.delete(v.id);
-                if (typeof registarEvento === 'function') registarEvento(v.id, 'livre');
-            } else {
-                vagasOcupadas.add(v.id);
-                const sorteado = imgCarrinhos[Math.floor(Math.random() * imgCarrinhos.length)];
-                vagaCarrinho.set(v.id, sorteado);
-                if (typeof registarEvento === 'function') registarEvento(v.id, 'ocupada');
             }
+            guardarInterditadas(vagasInterditadas);
             desenharVagas();
         }
     });
@@ -135,7 +175,7 @@ socket.on('update_vagas', (data) => {
         const imgCar = imgCarrinhos[0];
         data.vagas_ocupadas.forEach((id) => {
             const n = typeof id === 'number' ? id : parseInt(id, 10);
-            if (!Number.isNaN(n) && n >= 1) {
+            if (!Number.isNaN(n) && n >= 1 && !vagasInterditadas.has(n)) {
                 vagasOcupadas.add(n);
                 if (imgCar) vagaCarrinho.set(n, imgCar);
             }
@@ -156,6 +196,34 @@ socket.on('contador_carros', (data) => {
     const elTopo = document.getElementById('total-carros-topo-num');
     if (elPainel) elPainel.textContent = valor;
     if (elTopo) elTopo.textContent = valor;
+});
+
+const gridMapa = document.getElementById('mapa-vagas-grid');
+if (gridMapa) {
+    gridMapa.addEventListener('click', (e) => {
+        const cell = e.target.closest('.mv');
+        if (!cell || !cell.id) return;
+        const id = parseInt(cell.id.replace('mv-', ''), 10);
+        if (Number.isNaN(id) || id < 1) return;
+        if (vagasInterditadas.has(id)) {
+            vagasInterditadas.delete(id);
+        } else {
+            vagasInterditadas.add(id);
+            vagasOcupadas.delete(id);
+            vagaCarrinho.delete(id);
+        }
+        guardarInterditadas(vagasInterditadas);
+        desenharVagas();
+    });
+}
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        const m = document.getElementById('modal-config');
+        if (m && m.classList.contains('modal-config--aberto') && typeof fecharConfig === 'function') {
+            fecharConfig();
+        }
+    }
 });
 
 window.addEventListener('resize', desenharVagas);
