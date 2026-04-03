@@ -31,7 +31,8 @@ const vagasOcupadas = new Set();
 const vagaCarrinho  = new Map();
 
 const LS_INTERDITADAS = 'smartpark_interditadas';
-const LS_ESTABILIDADE = 'smartpark_estabilidade_seg';
+const LS_TEMPO_EST = 'tempo_estabilidade';
+const LS_ESTABILIDADE_LEGACY = 'smartpark_estabilidade_seg';
 
 function carregarInterditadas() {
     try {
@@ -58,9 +59,31 @@ window.vagasInterditadas = vagasInterditadas;
 window.totalVagasPainel = 24;
 
 window.getEstabilidadeSegundos = function () {
-    const v = parseInt(localStorage.getItem(LS_ESTABILIDADE) || '5', 10);
+    const raw =
+        localStorage.getItem(LS_TEMPO_EST) ||
+        localStorage.getItem(LS_ESTABILIDADE_LEGACY) ||
+        '5';
+    const v = parseInt(raw, 10);
     return [3, 5, 8, 10].includes(v) ? v : 5;
 };
+
+window.definirTempoEstabilidade = function (segundos) {
+    const t = [3, 5, 8, 10].includes(Number(segundos)) ? Number(segundos) : 5;
+    try {
+        localStorage.setItem(LS_TEMPO_EST, String(t));
+    } catch (e) {}
+    if (socket.connected) {
+        socket.emit('set_tempo_estabilidade', { tempo: t });
+    }
+};
+
+socket.on('connect', function () {
+    const t = window.getEstabilidadeSegundos();
+    try {
+        localStorage.setItem(LS_TEMPO_EST, String(t));
+    } catch (e) {}
+    socket.emit('set_tempo_estabilidade', { tempo: t });
+});
 
 const imgCarrinhos = [
     '/static/img/carrinho_ocupado.png',

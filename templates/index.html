@@ -159,13 +159,18 @@
         (function initEstabilidade() {
             const salvo = (typeof window.getEstabilidadeSegundos === 'function')
                 ? window.getEstabilidadeSegundos()
-                : parseInt(localStorage.getItem('smartpark_estabilidade_seg') || '5', 10);
+                : parseInt(localStorage.getItem('tempo_estabilidade') || localStorage.getItem('smartpark_estabilidade_seg') || '5', 10);
             const val = [3, 5, 8, 10].includes(salvo) ? salvo : 5;
             document.querySelectorAll('input[name="estab"]').forEach(function (inp) {
                 inp.checked = parseInt(inp.value, 10) === val;
                 inp.addEventListener('change', function () {
                     if (inp.checked) {
-                        try { localStorage.setItem('smartpark_estabilidade_seg', inp.value); } catch (e) {}
+                        const t = parseInt(inp.value, 10);
+                        if (typeof window.definirTempoEstabilidade === 'function') {
+                            window.definirTempoEstabilidade(t);
+                        } else {
+                            try { localStorage.setItem('tempo_estabilidade', String(t)); } catch (e) {}
+                        }
                     }
                 });
             });

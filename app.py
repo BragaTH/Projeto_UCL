@@ -15,6 +15,8 @@ SERIAL_PORT = 'COM3'
 BAUD_RATE = 9600
 # Intervalo entre leituras da câmera (segundos)
 VISION_INTERVAL = 0.2
+# Estabilidade temporal (segundos) — atualizável via Socket.IO sem reiniciar
+TEMPO_ESTABILIDADE = 5
 total_carros = 0
 
 # --- THREAD DO ARDUINO ---
@@ -48,6 +50,20 @@ def serial_thread():
     except Exception as e:
         print("Aviso: Arduino não detectado. O sistema de visão continuará funcionando.")
 
+
+@socketio.on("set_tempo_estabilidade")
+def set_tempo_estabilidade(data):
+    global TEMPO_ESTABILIDADE
+    try:
+        t = int((data or {}).get("tempo", TEMPO_ESTABILIDADE))
+        if t not in (3, 5, 8, 10):
+            t = 5
+        TEMPO_ESTABILIDADE = t
+        print(f"[CONFIG] Tempo atualizado: {TEMPO_ESTABILIDADE}s")
+    except Exception as e:
+        print("Erro ao atualizar tempo:", e)
+
+
 # --- THREAD DE VISÃO (mesma lógica que detectar/sistema_vagas.py) ---
 def vision_thread():
     vagas, base_vagas = detectar_service.carregar()
@@ -63,22 +79,53 @@ def vision_thread():
         print("Aviso: não foi possível abrir a câmera (índice 0).")
         return
 
+    total = len(vagas)
+
+    # Estado confirmado (emitido ao front) vs. leitura instantânea da deteção
+    estado_real = [False] * total
+    estado_temp = [False] * total
+    tempo_inicio = [None] * total  # time.monotonic() quando estado_temp mudou
+
+    print("Visão com estabilidade temporal ativa (ajustável em tempo real).")
+
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret:
             break
 
-        ids_ocupadas, total = detectar_service.ids_ocupadas_no_frame(
+        ids_ocupadas, _ = detectar_service.ids_ocupadas_no_frame(
             frame, vagas, base_vagas
         )
-        n_ocupadas = len(ids_ocupadas)
+
+        estado_detectado = [False] * total
+        for idx in ids_ocupadas:
+            if 1 <= idx <= total:
+                estado_detectado[idx - 1] = True
+
+        agora = time.monotonic()
+        te = TEMPO_ESTABILIDADE
+        if te < 1:
+            te = 1
+
+        for i in range(total):
+            det = estado_detectado[i]
+            if det != estado_temp[i]:
+                estado_temp[i] = det
+                tempo_inicio[i] = agora
+            elif tempo_inicio[i] is not None and (agora - tempo_inicio[i]) >= te:
+                estado_real[i] = estado_temp[i]
+
+        # 🔹 Monta lista final confirmada
+        ids_confirmadas = [
+            i + 1 for i, ocupado in enumerate(estado_real) if ocupado
+        ]
 
         socketio.emit(
             "update_vagas",
             {
-                "ocupadas": n_ocupadas,
+                "ocupadas": len(ids_confirmadas),
                 "total": total,
-                "vagas_ocupadas": ids_ocupadas,
+                "vagas_ocupadas": ids_confirmadas,
             },
         )
 
