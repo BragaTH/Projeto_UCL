@@ -209,6 +209,21 @@ def monitorar():
             if ocupada:
                 ocupadas += 1
 
+            # Marcações das vagas sobre o vídeo (como na calibração)
+            cor_borda = (0, 0, 255) if ocupada else (0, 255, 0)
+            cv2.polylines(frame, [pts], True, cor_borda, 2)
+            cx = int(np.mean(pts[:, 0]))
+            cy = int(np.mean(pts[:, 1]))
+            cv2.putText(
+                frame,
+                nome,
+                (cx, cy),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.5,
+                cor_borda,
+                2,
+            )
+
         livres = len(vagas) - ocupadas
 
         # 🔹 PAINEL
