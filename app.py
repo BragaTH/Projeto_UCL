@@ -19,15 +19,24 @@ VISION_INTERVAL = 0.2
 TEMPO_ESTABILIDADE = 5
 total_carros = 0
 
+arduino_serial = None
+serial_lock = threading.Lock()
+
 # --- THREAD DO ARDUINO ---
 def serial_thread():
-    global total_carros
+    global total_carros, arduino_serial
+    arduino_serial = None
     try:
         ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1)
+        arduino_serial = ser
         print(f"Conectado ao Arduino na porta {SERIAL_PORT}")
         while True:
-            if ser.in_waiting > 0:
-                linha = ser.readline().decode('utf-8', errors='ignore').strip()
+            with serial_lock:
+                if ser.in_waiting > 0:
+                    linha = ser.readline().decode('utf-8', errors='ignore').strip()
+                else:
+                    linha = None
+            if linha:
                 if "ENTRADA" in linha:
                     socketio.emit('evento_arduino', {'tipo': 'entrada', 'msg': 'Carro detectado na cancela!'})
                 try:
@@ -49,6 +58,8 @@ def serial_thread():
             time.sleep(0.1)
     except Exception as e:
         print("Aviso: Arduino não detectado. O sistema de visão continuará funcionando.")
+    finally:
+        arduino_serial = None
 
 
 @socketio.on("set_tempo_estabilidade")
@@ -56,12 +67,35 @@ def set_tempo_estabilidade(data):
     global TEMPO_ESTABILIDADE
     try:
         t = int((data or {}).get("tempo", TEMPO_ESTABILIDADE))
-        if t not in (3, 5, 8, 10):
+        if t not in (0, 3, 5, 10):
             t = 5
         TEMPO_ESTABILIDADE = t
         print(f"[CONFIG] Tempo atualizado: {TEMPO_ESTABILIDADE}s")
     except Exception as e:
         print("Erro ao atualizar tempo:", e)
+
+
+@socketio.on("comando_cancela")
+def comando_cancela(data):
+    acao = (data or {}).get("acao")
+    if acao == "abrir":
+        cmd = b"ABRIR_CANCELA\n"
+        print("[EMERGENCIA] Forçando abertura da cancela (serial)")
+    elif acao == "fechar":
+        cmd = b"FECHAR_CANCELA\n"
+        print("[EMERGENCIA] Forçando fechamento da cancela (serial)")
+    else:
+        return
+    global arduino_serial
+    try:
+        if arduino_serial is not None and getattr(arduino_serial, "is_open", False):
+            with serial_lock:
+                arduino_serial.write(cmd)
+                arduino_serial.flush()
+        else:
+            print("Aviso: Arduino não conectado — comando da cancela não enviado.")
+    except Exception as e:
+        print("Erro ao enviar comando da cancela:", e)
 
 
 # --- THREAD DE VISÃO (mesma lógica que detectar/sistema_vagas.py) ---
@@ -103,9 +137,7 @@ def vision_thread():
                 estado_detectado[idx - 1] = True
 
         agora = time.monotonic()
-        te = TEMPO_ESTABILIDADE
-        if te < 1:
-            te = 1
+        te = max(0, TEMPO_ESTABILIDADE)
 
         for i in range(total):
             det = estado_detectado[i]

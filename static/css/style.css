@@ -282,6 +282,149 @@ html, body {
     background: rgba(58,175,92,0.1);
 }
 
+.modal-config-divider {
+    height: 1px;
+    background: rgba(255,255,255,0.08);
+    margin: 18px 0 14px;
+}
+
+.btn-emergencia {
+    width: 100%;
+    margin-top: 4px;
+    padding: 11px 14px;
+    border-radius: 8px;
+    font-family: monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: background .2s, border-color .2s, color .2s, transform .12s ease, box-shadow .2s;
+}
+.btn-emergencia-desativado {
+    background: rgba(80,80,80,0.25);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.28);
+    cursor: not-allowed;
+    pointer-events: none;
+}
+.btn-emergencia-ativo {
+    background: rgba(180, 30, 30, 0.35);
+    border: 1px solid rgba(255, 80, 80, 0.65);
+    color: #ffb3b3;
+    cursor: pointer;
+    pointer-events: auto;
+    box-shadow: 0 0 0 1px rgba(255,60,60,0.15);
+}
+.btn-emergencia-ativo:hover {
+    background: rgba(200, 40, 40, 0.5);
+    border-color: rgba(255, 120, 120, 0.85);
+    color: #fff;
+}
+.btn-emergencia-ativo:active {
+    transform: scale(0.98);
+}
+
+.modal-cancela-emergencia {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 220;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    box-sizing: border-box;
+}
+.modal-cancela-emergencia.modal-cancela-emergencia--aberto {
+    display: flex;
+}
+.modal-cancela-emergencia-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.65);
+    backdrop-filter: blur(3px);
+}
+.modal-cancela-emergencia-panel {
+    position: relative;
+    width: 100%;
+    max-width: 320px;
+    padding: 20px 22px 18px;
+    background: rgba(14,16,14,0.98);
+    border: 1px solid rgba(58,175,92,0.22);
+    border-radius: 12px;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.55);
+    animation: modal-cancela-pop .22s ease;
+}
+@keyframes modal-cancela-pop {
+    from { opacity: 0; transform: scale(0.96); }
+    to { opacity: 1; transform: scale(1); }
+}
+.modal-cancela-titulo {
+    margin: 0 0 8px;
+    font-family: monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.5);
+}
+.modal-cancela-desc {
+    margin: 0 0 16px;
+    font-size: 11px;
+    line-height: 1.45;
+    color: rgba(255,255,255,0.35);
+}
+.modal-cancela-acoes {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.btn-cancela-acao {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-family: monospace;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: filter .15s, transform .1s;
+}
+.btn-cancela-acao:active {
+    transform: scale(0.99);
+}
+.btn-cancela-abrir {
+    background: rgba(58,175,92,0.22);
+    border-color: rgba(58,175,92,0.55);
+    color: #8ee4a8;
+}
+.btn-cancela-abrir:hover {
+    background: rgba(58,175,92,0.35);
+    color: #fff;
+}
+.btn-cancela-fechar {
+    background: rgba(120, 30, 30, 0.35);
+    border-color: rgba(200, 70, 70, 0.5);
+    color: #f0a0a0;
+}
+.btn-cancela-fechar:hover {
+    background: rgba(160, 40, 40, 0.45);
+    color: #fff;
+}
+.modal-cancela-voltar {
+    margin-top: 14px;
+    width: 100%;
+    padding: 8px;
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.35);
+    font-family: monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+.modal-cancela-voltar:hover {
+    color: rgba(255,255,255,0.6);
+}
+
 /* LAYOUT PRINCIPAL */
 #main-layout {
     width: 90vw;

@@ -64,11 +64,11 @@ window.getEstabilidadeSegundos = function () {
         localStorage.getItem(LS_ESTABILIDADE_LEGACY) ||
         '5';
     const v = parseInt(raw, 10);
-    return [3, 5, 8, 10].includes(v) ? v : 5;
+    return [0, 3, 5, 10].includes(v) ? v : 5;
 };
 
 window.definirTempoEstabilidade = function (segundos) {
-    const t = [3, 5, 8, 10].includes(Number(segundos)) ? Number(segundos) : 5;
+    const t = [0, 3, 5, 10].includes(Number(segundos)) ? Number(segundos) : 5;
     try {
         localStorage.setItem(LS_TEMPO_EST, String(t));
     } catch (e) {}
@@ -84,6 +84,48 @@ socket.on('connect', function () {
     } catch (e) {}
     socket.emit('set_tempo_estabilidade', { tempo: t });
 });
+
+window._socketOcupadas = 0;
+window._socketTotalVagas = 24;
+
+function atualizarEstadoEmergencia() {
+    const ocupadas = Number(window._socketOcupadas);
+    const total = Number(window._socketTotalVagas);
+    const estacionamentoLotado = total > 0 && ocupadas >= total;
+    const btn = document.getElementById('btn-emergencia');
+    if (!btn) return;
+    btn.classList.remove('btn-emergencia-ativo', 'btn-emergencia-desativado');
+    if (estacionamentoLotado) {
+        btn.classList.add('btn-emergencia-ativo');
+        btn.disabled = false;
+        btn.removeAttribute('aria-disabled');
+        btn.title = 'Controle da Cancela — emergência (abrir opções)';
+    } else {
+        btn.classList.add('btn-emergencia-desativado');
+        btn.disabled = true;
+        btn.setAttribute('aria-disabled', 'true');
+        btn.title = 'Só disponível com estacionamento lotado — função de emergência';
+    }
+}
+
+function abrirModalCancelaEmergencia() {
+    const ocupadas = Number(window._socketOcupadas);
+    const total = Number(window._socketTotalVagas);
+    if (!(total > 0 && ocupadas >= total)) return;
+    const m = document.getElementById('modal-cancela-emergencia');
+    if (m) {
+        m.classList.add('modal-cancela-emergencia--aberto');
+        m.setAttribute('aria-hidden', 'false');
+    }
+}
+
+window.fecharModalCancelaEmergencia = function () {
+    const m = document.getElementById('modal-cancela-emergencia');
+    if (m) {
+        m.classList.remove('modal-cancela-emergencia--aberto');
+        m.setAttribute('aria-hidden', 'true');
+    }
+};
 
 const imgCarrinhos = [
     '/static/img/carrinho_ocupado.png',
@@ -188,9 +230,14 @@ socket.on('update_vagas', (data) => {
     const count = document.getElementById('count');
     if (count) count.innerText = data.ocupadas;
 
+    if (typeof data.ocupadas === 'number') {
+        window._socketOcupadas = data.ocupadas;
+    }
     if (typeof data.total === 'number' && data.total > 0) {
+        window._socketTotalVagas = data.total;
         window.totalVagasPainel = data.total;
     }
+    atualizarEstadoEmergencia();
 
     vagasOcupadas.clear();
     vagaCarrinho.clear();
@@ -206,6 +253,26 @@ socket.on('update_vagas', (data) => {
     }
 
     desenharVagas();
+});
+
+const btnEmergencia = document.getElementById('btn-emergencia');
+if (btnEmergencia) {
+    btnEmergencia.addEventListener('click', () => {
+        const ocupadas = Number(window._socketOcupadas);
+        const total = Number(window._socketTotalVagas);
+        if (!(total > 0 && ocupadas >= total)) return;
+        abrirModalCancelaEmergencia();
+    });
+}
+
+document.getElementById('btn-cancela-abrir')?.addEventListener('click', () => {
+    socket.emit('comando_cancela', { acao: 'abrir' });
+    window.fecharModalCancelaEmergencia();
+});
+
+document.getElementById('btn-cancela-fechar')?.addEventListener('click', () => {
+    socket.emit('comando_cancela', { acao: 'fechar' });
+    window.fecharModalCancelaEmergencia();
 });
 
 socket.on('evento_arduino', (data) => {
@@ -242,6 +309,11 @@ if (gridMapa) {
 
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
+        const mc = document.getElementById('modal-cancela-emergencia');
+        if (mc && mc.classList.contains('modal-cancela-emergencia--aberto')) {
+            window.fecharModalCancelaEmergencia();
+            return;
+        }
         const m = document.getElementById('modal-config');
         if (m && m.classList.contains('modal-config--aberto') && typeof fecharConfig === 'function') {
             fecharConfig();
@@ -251,4 +323,5 @@ document.addEventListener('keydown', (e) => {
 
 window.addEventListener('resize', desenharVagas);
 document.getElementById('estacionamento').addEventListener('load', desenharVagas);
+atualizarEstadoEmergencia();
 desenharVagas();

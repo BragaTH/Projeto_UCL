@@ -44,12 +44,29 @@
                 <h3 class="modal-config-section-title">Estabilidade de detecção</h3>
                 <p class="modal-config-desc">Tempo mínimo para confirmar ocupação/liberação de vaga</p>
                 <div class="estab-options" id="estab-options">
+                    <label class="estab-option"><input type="radio" name="estab" value="0"><span>0 segundos</span></label>
                     <label class="estab-option"><input type="radio" name="estab" value="3"><span>3 segundos</span></label>
                     <label class="estab-option"><input type="radio" name="estab" value="5"><span>5 segundos</span></label>
-                    <label class="estab-option"><input type="radio" name="estab" value="8"><span>8 segundos</span></label>
                     <label class="estab-option"><input type="radio" name="estab" value="10"><span>10 segundos</span></label>
                 </div>
+                <div class="modal-config-divider"></div>
+                <h3 class="modal-config-section-title">Emergência</h3>
+                <p class="modal-config-desc">Função de <strong>emergência</strong>: <strong>Controle da Cancela</strong> manual quando o estacionamento está lotado (prioridade). Comandos enviados ao Arduino (USB).</p>
+                <button type="button" id="btn-emergencia" class="btn-emergencia btn-emergencia-desativado" disabled aria-disabled="true" title="Só disponível com estacionamento lotado — função de emergência">Controle da Cancela</button>
             </div>
+        </div>
+    </div>
+
+    <div id="modal-cancela-emergencia" class="modal-cancela-emergencia" aria-hidden="true">
+        <div class="modal-cancela-emergencia-backdrop" onclick="window.fecharModalCancelaEmergencia()"></div>
+        <div class="modal-cancela-emergencia-panel" role="dialog" aria-labelledby="modal-cancela-titulo">
+            <h3 id="modal-cancela-titulo" class="modal-cancela-titulo">Emergência — Controle da Cancela</h3>
+            <p class="modal-cancela-desc">Comandos manuais ao Arduino (USB). Use apenas em <strong>situação de emergência</strong>.</p>
+            <div class="modal-cancela-acoes">
+                <button type="button" id="btn-cancela-abrir" class="btn-cancela-acao btn-cancela-abrir">Abrir cancela</button>
+                <button type="button" id="btn-cancela-fechar" class="btn-cancela-acao btn-cancela-fechar">Fechar cancela</button>
+            </div>
+            <button type="button" class="modal-cancela-voltar" onclick="window.fecharModalCancelaEmergencia()">Voltar</button>
         </div>
     </div>
 
@@ -160,7 +177,7 @@
             const salvo = (typeof window.getEstabilidadeSegundos === 'function')
                 ? window.getEstabilidadeSegundos()
                 : parseInt(localStorage.getItem('tempo_estabilidade') || localStorage.getItem('smartpark_estabilidade_seg') || '5', 10);
-            const val = [3, 5, 8, 10].includes(salvo) ? salvo : 5;
+            const val = [0, 3, 5, 10].includes(salvo) ? salvo : 5;
             document.querySelectorAll('input[name="estab"]').forEach(function (inp) {
                 inp.checked = parseInt(inp.value, 10) === val;
                 inp.addEventListener('change', function () {
