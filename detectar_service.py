@@ -13,8 +13,7 @@ _DETECTAR = os.path.join(_DIR, "detectar")
 ARQUIVO_VAGAS = os.path.join(_DETECTAR, "vagas.pkl")
 BASE_VAGAS = os.path.join(_DETECTAR, "base_vagas.pkl")
 
-LIMIAR = 25
-
+LIMIAR = 50
 
 def carregar():
     """Retorna (lista_vagas, base_vagas) ou (None, None) se faltar ficheiro."""
@@ -45,9 +44,13 @@ def ids_ocupadas_no_frame(frame, vagas, base_vagas, limiar=LIMIAR):
         base = base_vagas[i]
         if corte_atual.size == 0 or base.size == 0:
             continue
-        corte_atual = cv2.resize(corte_atual, (base.shape[1], base.shape[0]))
-        dif = cv2.absdiff(base, corte_atual)
-        media = np.mean(dif)
+
+        corte_atual = cv2.resize(corte_atual, (base.shape[1], base.shape[0]))        
+        dif = cv2.absdiff(base, corte_atual)       
+        gray = cv2.cvtColor(dif, cv2.COLOR_BGR2GRAY)
+        blur = cv2.GaussianBlur(gray, (5, 5), 0)        
+        _, thresh = cv2.threshold(blur, limiar, 255, cv2.THRESH_BINARY)        
+        media = np.mean(thresh)        
         if media > limiar:
             ocupadas_ids.append(i + 1)
     return ocupadas_ids, len(vagas)
