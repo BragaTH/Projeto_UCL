@@ -88,13 +88,30 @@ socket.on('connect', function () {
 window._socketOcupadas = 0;
 window._socketTotalVagas = 24;
 
+let bloqueioCancela = false;
+
+function bloquearBotao(btn) {
+    bloqueioCancela = true;
+    btn.disabled = true;
+    btn.style.opacity = "0.5";
+
+    setTimeout(() => {
+        bloqueioCancela = false;
+        btn.disabled = false;
+        btn.style.opacity = "1";
+    }, 2000);
+}
 function atualizarEstadoEmergencia() {
-    const ocupadas = Number(window._socketOcupadas);
-    const total = Number(window._socketTotalVagas);
+    const ocupadas = Number(window._socketOcupadas || 0);
+    const total = Number(window._socketTotalVagas || 0);
+
     const estacionamentoLotado = total > 0 && ocupadas >= total;
+
     const btn = document.getElementById('btn-emergencia');
     if (!btn) return;
+
     btn.classList.remove('btn-emergencia-ativo', 'btn-emergencia-desativado');
+
     if (estacionamentoLotado) {
         btn.classList.add('btn-emergencia-ativo');
         btn.disabled = false;
@@ -108,27 +125,39 @@ function atualizarEstadoEmergencia() {
     }
 }
 
+
 function abrirModalCancelaEmergencia() {
-    const ocupadas = Number(window._socketOcupadas);
-    const total = Number(window._socketTotalVagas);
+    const ocupadas = Number(window._socketOcupadas || 0);
+    const total = Number(window._socketTotalVagas || 0);
+
     if (!(total > 0 && ocupadas >= total)) return;
+
     const m = document.getElementById('modal-cancela-emergencia');
-    if (m) {
-        m.classList.add('modal-cancela-emergencia--aberto');
-        m.setAttribute('aria-hidden', 'false');
+    if (!m) return;
+
+    m.classList.add('modal-cancela-emergencia--aberto');
+    m.setAttribute('aria-hidden', 'false');
+
+    // 🔒 impede fechamento ao clicar fora
+    const backdrop = m.querySelector('.modal-cancela-emergencia-backdrop');
+    if (backdrop) {
+        backdrop.onclick = function (e) {
+            e.stopPropagation();
+            // NÃO fecha mais
+        };
     }
 }
 
 window.fecharModalCancelaEmergencia = function () {
     const m = document.getElementById('modal-cancela-emergencia');
-    if (m) {
-        m.classList.remove('modal-cancela-emergencia--aberto');
-        m.setAttribute('aria-hidden', 'true');
-    }
+    if (!m) return;
+
+    m.classList.remove('modal-cancela-emergencia--aberto');
+    m.setAttribute('aria-hidden', 'true');
 };
 
 const imgCarrinhos = [
-    '/static/img/carrinho_ocupado.png',
+ '/static/img/carrinho_ocupado.png',
 ].map(src => {
     const img = new Image();
     img.src = src;
@@ -267,12 +296,12 @@ if (btnEmergencia) {
 
 document.getElementById('btn-cancela-abrir')?.addEventListener('click', () => {
     socket.emit('comando_cancela', { acao: 'abrir' });
-    window.fecharModalCancelaEmergencia();
+    
 });
 
 document.getElementById('btn-cancela-fechar')?.addEventListener('click', () => {
     socket.emit('comando_cancela', { acao: 'fechar' });
-    window.fecharModalCancelaEmergencia();
+    
 });
 
 socket.on('evento_arduino', (data) => {

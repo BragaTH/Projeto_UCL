@@ -49,16 +49,14 @@
                     <label class="estab-option"><input type="radio" name="estab" value="5"><span>5 segundos</span></label>
                     <label class="estab-option"><input type="radio" name="estab" value="10"><span>10 segundos</span></label>
                 </div>
-                <div class="modal-config-divider"></div>
-                <h3 class="modal-config-section-title">Emergência</h3>
-                <p class="modal-config-desc">Função de <strong>emergência</strong>: <strong>Controle da Cancela</strong> manual quando o estacionamento está lotado (prioridade). Comandos enviados ao Arduino (USB).</p>
-                <button type="button" id="btn-emergencia" class="btn-emergencia btn-emergencia-desativado" disabled aria-disabled="true" title="Só disponível com estacionamento lotado — função de emergência">Controle da Cancela</button>
+                
+               
             </div>
         </div>
     </div>
 
     <div id="modal-cancela-emergencia" class="modal-cancela-emergencia" aria-hidden="true">
-        <div class="modal-cancela-emergencia-backdrop" onclick="window.fecharModalCancelaEmergencia()"></div>
+        <div class="modal-cancela-emergencia-backdrop"></div>
         <div class="modal-cancela-emergencia-panel" role="dialog" aria-labelledby="modal-cancela-titulo">
             <h3 id="modal-cancela-titulo" class="modal-cancela-titulo">Emergência — Controle da Cancela</h3>
             <p class="modal-cancela-desc">Comandos manuais ao Arduino (USB). Use apenas em <strong>situação de emergência</strong>.</p>
@@ -125,6 +123,16 @@
                 </div>
                 <div id="historico-lista"></div>
             </div>
+            <div class="card">
+    <div class="card-title">emergência</div>
+
+    <button id="btn-emergencia"
+        class="btn-emergencia btn-emergencia-desativado"
+        disabled
+        aria-disabled="true">
+        Controle da Cancela
+    </button>
+</div>
 
         </div>
     </div>
@@ -214,7 +222,7 @@
             localStorage.removeItem('smartpark_historico');
             historicoEventos.length = 0;
             atualizarHistorico();
-        }
+        }F
 
         // Inicializa com o que estava guardado
         const historicoEventos = carregarHistorico();
@@ -246,7 +254,7 @@
                     div.style.borderLeftColor = '#f5c518';
                     div.innerHTML = `
                         <span class="ev-hora">${ev.data} ${ev.hora}</span>
-                        <span class="ev-msg" style="color:#f5c518">cancela ativada</span>
+                        <span class="ev-msg" style="color:#f5c518">${ev.vagaId}</span>
                     `;
                 } else {
                     div.style.borderLeftColor = ev.tipo === 'ocupada' ? '#dc3c3c' : '#3aaf5c';

@@ -197,7 +197,7 @@ def monitorar():
 
             ocupada = media > LIMIAR
 
-            # 🔹 DETECÇÃO DE EVENTO
+            #  DETECÇÃO DE EVENTO
             if estado[i] == 0 and ocupada:
                 print(f"🚗 Entrou na {nome}")
 

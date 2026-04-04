@@ -69,6 +69,40 @@ html, body {
     box-sizing: border-box;
 }
 
+/* ================================= */
+/*  AJUSTES DO BOTÃO EMERGÊNCIA    */
+/* ================================= */
+
+/* Garante organização vertical do painel */
+#painel {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: width .3s ease, opacity .3s ease;
+    max-height: calc(100vh - 90px);
+}
+
+/* ================================= */
+/* BLOQUEIO VISUAL (ANTI-SPAM)    */
+/* ================================= */
+
+.btn-emergencia:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.btn-cancela-acao:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    filter: grayscale(0.4);
+}
+
+/* Feedback de clique */
+.btn-cancela-acao:active {
+    transform: scale(0.97);
+}
+
 #logo {
     font-family: 'Segoe UI', sans-serif;
     font-size: 15px;
