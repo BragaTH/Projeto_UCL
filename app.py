@@ -4,6 +4,7 @@ from flask_socketio import SocketIO
 import threading
 import serial
 import time
+from database import init_db, registrar_entrada, registrar_saida
 
 import detectar_service
 
@@ -13,14 +14,15 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 # --- CONFIGURAÇÕES ---
 SERIAL_PORT = 'COM3'
 BAUD_RATE = 9600
-# Intervalo entre leituras da câmera (segundos)
 VISION_INTERVAL = 0.2
-# Estabilidade temporal (segundos) — atualizável via Socket.IO sem reiniciar
 TEMPO_ESTABILIDADE = 5
 total_carros = 0
 
 arduino_serial = None
 serial_lock = threading.Lock()
+
+# Inicializa o banco de dados
+init_db()
 
 # --- THREAD DO ARDUINO ---
 def serial_thread():
@@ -53,7 +55,6 @@ def serial_thread():
                             total_carros = 0
                         socketio.emit("contador_carros", {"total": total_carros})
                 except (ValueError, IndexError):
-                    # Ignora linhas inesperadas da serial sem interromper a thread.
                     pass
             time.sleep(0.1)
     except Exception as e:
@@ -98,7 +99,7 @@ def comando_cancela(data):
         print("Erro ao enviar comando da cancela:", e)
 
 
-# --- THREAD DE VISÃO (mesma lógica que detectar/sistema_vagas.py) ---
+# --- THREAD DE VISÃO ---
 def vision_thread():
     vagas, base_vagas = detectar_service.carregar()
     if vagas is None:
@@ -115,10 +116,12 @@ def vision_thread():
 
     total = len(vagas)
 
-    # Estado confirmado (emitido ao front) vs. leitura instantânea da deteção
-    estado_real = [False] * total
-    estado_temp = [False] * total
-    tempo_inicio = [None] * total  # time.monotonic() quando estado_temp mudou
+    estado_real  = [False] * total
+    estado_temp  = [False] * total
+    tempo_inicio = [None]  * total
+
+    # Controle para detectar entradas e saídas por vaga
+    vagas_anteriores = set()
 
     print("Visão com estabilidade temporal ativa (ajustável em tempo real).")
 
@@ -147,16 +150,28 @@ def vision_thread():
             elif tempo_inicio[i] is not None and (agora - tempo_inicio[i]) >= te:
                 estado_real[i] = estado_temp[i]
 
-        # 🔹 Monta lista final confirmada
         ids_confirmadas = [
             i + 1 for i, ocupado in enumerate(estado_real) if ocupado
         ]
 
+        # --- DETECÇÃO DE ENTRADAS E SAÍDAS POR VAGA ---
+        conjunto_atual    = set(ids_confirmadas)
+        novas_entradas    = conjunto_atual - vagas_anteriores
+        novas_saidas      = vagas_anteriores - conjunto_atual
+
+        for vaga in novas_entradas:
+            registrar_entrada(vaga)
+
+        for vaga in novas_saidas:
+            registrar_saida(vaga)
+
+        vagas_anteriores = conjunto_atual
+
         socketio.emit(
             "update_vagas",
             {
-                "ocupadas": len(ids_confirmadas),
-                "total": total,
+                "ocupadas"     : len(ids_confirmadas),
+                "total"        : total,
                 "vagas_ocupadas": ids_confirmadas,
             },
         )
@@ -165,6 +180,7 @@ def vision_thread():
 
     cap.release()
 
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -172,8 +188,8 @@ def index():
 if __name__ == '__main__':
     t_vision = threading.Thread(target=vision_thread, daemon=True)
     t_serial = threading.Thread(target=serial_thread, daemon=True)
-    
+
     t_vision.start()
     t_serial.start()
-    
+
     socketio.run(app, host='127.0.0.1', port=5000, debug=False, allow_unsafe_werkzeug=True)
