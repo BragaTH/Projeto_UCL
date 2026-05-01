@@ -219,7 +219,7 @@ html, body {
 .modal-config-backdrop {
     position: absolute;
     inset: 0;
-    background: rgba(0,0,0,0.55);
+    background: rgba(0,0,0,0.3);
     backdrop-filter: blur(2px);
 }
 .modal-config-panel {
@@ -253,6 +253,55 @@ html, body {
     text-transform: uppercase;
     color: rgba(255,255,255,0.45);
 }
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 20px;
+    margin-left: auto;
+    margin-right: 10px;
+}
+
+.switch input {
+    display: none;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background-color: #555;
+    border-radius: 20px;
+    transition: 0.3s;
+}
+
+.slider::before {
+    content: "";
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    border-radius: 50%;
+    transition: 0.3s;
+}
+
+input:checked + .slider {
+    background-color: #00ff88;
+}
+
+input:checked + .slider::before {
+    transform: translateX(18px);
+}
+.modal-manutencao h3 {
+    color: rgba(255, 255, 255, 0.299);
+    font-family: monospace;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 10px;
+}
+
 .modal-config-close {
     background: none;
     border: none;
@@ -783,3 +832,39 @@ html, body {
 .ev-arduino { color: #f5c518 !important; }
 
 .ev-item:has(.ev-arduino) { border-left-color: #f5c518; }
+.sensores-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 10px;
+}
+
+.sensor-box {
+    text-align: center;
+    background: rgba(255, 255, 255, 0.447);
+    padding: 8px;
+    border-radius: 6px;
+}
+
+.on { color: #3aaf5c; }
+.off { color: #dc3c3c; }
+
+/* ===== MODAL MANUTENÇÃO ===== */
+.modal-manutencao .modal-config-backdrop {
+    background: rgba(0,0,0,0.35); 
+    backdrop-filter: none;       
+}
+
+/* contraste do painel */
+
+.modal-config-backdrop {
+  position: fixed;
+  inset: 0;
+  background: transparent; 
+  backdrop-filter: none;   
+  z-index: 0;
+}
+
+.modal-manutencao .modal-config-panel {
+    position: relative;
+    z-index: 1;
+}

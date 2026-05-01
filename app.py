@@ -5,7 +5,7 @@ import threading
 import serial
 import time
 from database import init_db, registrar_entrada, registrar_saida
-
+modo_diagnostico = False
 import detectar_service
 
 app = Flask(__name__)
@@ -24,44 +24,82 @@ serial_lock = threading.Lock()
 # Inicializa o banco de dados
 init_db()
 
-# --- THREAD DO ARDUINO ---
 def serial_thread():
     global total_carros, arduino_serial
     arduino_serial = None
+
+    DEBUG = False  # 🔥 controle de debug
+
     try:
         ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1)
+        time.sleep(3)
         arduino_serial = ser
+        ser.reset_input_buffer()
+
         print(f"Conectado ao Arduino na porta {SERIAL_PORT}")
+
         while True:
-            with serial_lock:
-                if ser.in_waiting > 0:
-                    linha = ser.readline().decode('utf-8', errors='ignore').strip()
-                else:
-                    linha = None
-            if linha:
-                if "ENTRADA" in linha:
-                    socketio.emit('evento_arduino', {'tipo': 'entrada', 'msg': 'Carro detectado na cancela!'})
+            linha = ser.readline().decode('utf-8', errors='ignore').strip()
+
+            if not linha:
+                continue
+
+            if DEBUG:
+                print("SERIAL:", linha)
+
+            # =========================
+            # STATUS DIAGNÓSTICO
+            # =========================
+            if linha.startswith("STATUS:"):
                 try:
-                    if linha.startswith("ENTRADA:"):
-                        valor = int(linha.split(":", 1)[1].strip())
-                        total_carros += valor
-                        if total_carros < 0:
-                            total_carros = 0
-                        socketio.emit("contador_carros", {"total": total_carros})
-                    elif linha.startswith("SAIDA:"):
-                        valor = int(linha.split(":", 1)[1].strip())
-                        total_carros -= valor
-                        if total_carros < 0:
-                            total_carros = 0
-                        socketio.emit("contador_carros", {"total": total_carros})
-                except (ValueError, IndexError):
-                    pass
-            time.sleep(0.1)
+                    dados_str = linha.replace("STATUS:", "")
+                    partes = dados_str.split(";")
+                    dados = {}
+
+                    for p in partes:
+                        if ":" in p:
+                            chave, valor = p.split(":")
+                            dados[chave.lower()] = valor
+
+                    socketio.emit("dados_manutencao", dados)
+
+                except Exception as e:
+                    print("Erro ao processar STATUS:", e)
+
+                continue
+
+            # =========================
+            # SISTEMA NORMAL
+            # =========================
+            if "ENTRADA" in linha:
+                socketio.emit('evento_arduino', {
+                    'tipo': 'entrada',
+                    'msg': 'Carro detectado na cancela!'
+                })
+
+            try:
+                if linha.startswith("ENTRADA:"):
+                    valor = int(linha.split(":", 1)[1].strip())
+                    total_carros += valor
+                    total_carros = max(total_carros, 0)
+
+                    socketio.emit("contador_carros", {"total": total_carros})
+
+                elif linha.startswith("SAIDA:"):
+                    valor = int(linha.split(":", 1)[1].strip())
+                    total_carros -= valor
+                    total_carros = max(total_carros, 0)
+
+                    socketio.emit("contador_carros", {"total": total_carros})
+
+            except (ValueError, IndexError):
+                pass
+
     except Exception as e:
-        print("Aviso: Arduino não detectado. O sistema de visão continuará funcionando.")
+        print("❌ ERRO REAL DA SERIAL:", e)
+
     finally:
         arduino_serial = None
-
 
 @socketio.on("set_tempo_estabilidade")
 def set_tempo_estabilidade(data):
@@ -98,6 +136,32 @@ def comando_cancela(data):
     except Exception as e:
         print("Erro ao enviar comando da cancela:", e)
 
+@socketio.on("start_diag")
+def start_diag():
+    global arduino_serial
+    print("[DIAG] Iniciando modo diagnóstico")
+
+    try:
+        if arduino_serial is not None and arduino_serial.is_open:
+            with serial_lock:
+                arduino_serial.write(b"START_DIAG\n")
+                arduino_serial.flush()
+    except Exception as e:
+        print("Erro ao iniciar diagnóstico:", e)
+
+
+@socketio.on("stop_diag")
+def stop_diag():
+    global arduino_serial
+    print("[DIAG] Parando modo diagnóstico")
+
+    try:
+        if arduino_serial is not None and arduino_serial.is_open:
+            with serial_lock:
+                arduino_serial.write(b"STOP_DIAG\n")
+                arduino_serial.flush()
+    except Exception as e:
+        print("Erro ao parar diagnóstico:", e)
 
 # --- THREAD DE VISÃO ---
 def vision_thread():

@@ -165,6 +165,34 @@ const imgCarrinhos = [
     return img;
 });
 
+function abrirManutencao() {
+    const m = document.getElementById('modal-manutencao');
+    if (!m) return;
+
+    m.classList.add('modal-config--aberto');
+    m.setAttribute('aria-hidden', 'false');
+    
+}
+
+
+function fecharManutencao() {
+    const m = document.getElementById('modal-manutencao');
+    if (!m) return;
+
+    m.classList.remove('modal-config--aberto');
+    m.setAttribute('aria-hidden', 'true');
+   
+}
+function toggleDiagnostico(el) {
+    if (el.checked) {
+        console.log("Diagnóstico ON");
+        socket.emit("start_diag");
+    } else {
+        console.log("Diagnóstico OFF");
+        socket.emit("stop_diag");
+    }
+}
+
 function desenharVagas() {
     const img    = document.getElementById('estacionamento');
     const canvas = document.getElementById('overlay');
@@ -255,6 +283,59 @@ document.getElementById('overlay').addEventListener('click', (e) => {
     });
 });
 
+socket.on("dados_manutencao", (dados) => {
+    console.log("DIAG:", dados); // debug
+
+    function set(id, valor, tipo) {
+        const el = document.getElementById(id);
+        if (!el) return;
+
+        let texto = valor;
+
+        if (tipo === "sensor") {
+            texto = valor; // 0 ou 1
+        }
+
+        if (tipo === "servo") {
+            texto = (valor == 90) ? "ABERTA" : "FECHADA";
+        }
+
+        if (tipo === "led") {
+            texto = (valor == 1) ? "ON" : "OFF";
+        }
+
+        el.textContent = texto;
+
+        if (valor == 1 || valor == 90) {
+            el.className = "sensor-valor on";
+        } else {
+            el.className = "sensor-valor off";
+        }
+    }
+
+    // Sensores
+    set("s1", dados.s1, "sensor");
+    set("s2", dados.s2, "sensor");
+    set("s3", dados.s3, "sensor");
+    set("s4", dados.s4, "sensor");
+    set("s5", dados.s5, "sensor");
+    set("s6", dados.s6, "sensor");
+
+    // Servos
+    set("servo1", dados.servo1, "servo");
+    set("servo2", dados.servo2, "servo");
+
+    // LEDs
+    set("led1", dados.led_entrada, "led");
+    set("led2", dados.led_lotado, "led");
+    set("led3", dados.led_vermelho, "led");
+    set("led4", dados.led_amarelo, "led");
+
+    // Display
+    set("display", dados.display, "outro");
+});
+
+
 socket.on('update_vagas', (data) => {
     const count = document.getElementById('count');
     if (count) count.innerText = data.ocupadas;
@@ -306,6 +387,10 @@ document.getElementById('btn-cancela-fechar')?.addEventListener('click', () => {
 
 socket.on('evento_arduino', (data) => {
     if (typeof registarEvento === 'function') registarEvento('cancela', 'arduino');
+});
+
+socket.on("dados_manutencao", (dados) => {
+    console.log("DIAG:", dados);
 });
 
 socket.on('contador_carros', (data) => {

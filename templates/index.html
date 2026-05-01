@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Smart Parking</title>
+    <title>KAPTA</title>
     <link rel="stylesheet" href="/static/css/style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
 </head>
@@ -13,7 +13,7 @@
     </div>
 
     <header id="topbar">
-        <div id="logo">SMART<span>PARK</span> UCL</div>
+        <div id="logo">Sistema KAPTA</span> UCL</div>
         <div id="status-pill">
             <div class="dot"></div>
             sistema ativo — câmera 01
@@ -28,8 +28,9 @@
                 &nbsp;|&nbsp;
                 <span id="hora"></span>
             </div>
+            <button id="btn-painel" onclick="togglePainel()">☰ Painel</button>
+            <button onclick="abrirManutencao()">🛠 Manutenção</button>            
             <button type="button" id="btn-config" class="btn-config" onclick="abrirConfig()" title="Configurações">&#9881;</button>
-            <button id="btn-painel" onclick="togglePainel()">&#9776; Painel</button>
         </div>
     </header>
 
@@ -68,75 +69,132 @@
         </div>
     </div>
 
-    <div id="main-layout">
+    <div id="main-layout">    
 
-        <div id="maquete-container" title="Clique numa vaga para interditar ou remover interdição">
-            <img src="/static/img/estacionamento.png" id="estacionamento">
-            <canvas id="overlay"></canvas>
-        </div>
 
-        <div id="painel" class="painel-fechado">
-
-            <div class="card">
-                <div class="card-title">disponibilidade</div>
-                <div class="vagas-count">
-                    <span id="vagas-livres-num">24</span>
-                    <span class="vagas-total">/ 24 vagas</span>
-                </div>
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progress-fill"></div>
-                </div>
-                <div class="vagas-label">
-                    <span id="vagas-livres-label">24 livres</span> · <span id="vagas-ocupadas-label">0 ocupadas</span>
-                </div>
-                <div class="vagas-meta" id="vagas-meta"></div>
-                <div class="contador-carros-discreto">
-                    fluxo total: <span id="total-carros-num">0</span>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-title">visão superior — câmera 01</div>
-                <div class="cam-box">
-                    <div class="cam-corner tl"></div>
-                    <div class="cam-corner tr"></div>
-                    <div class="cam-corner bl"></div>
-                    <div class="cam-corner br"></div>
-                    <span class="cam-label">ao vivo</span>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-title">mapa de vagas</div>
-                <div id="mapa-vagas-grid"></div>
-                <div class="legenda legenda-wrap">
-                    <span class="leg-item"><span class="leg-cor livre"></span>livre</span>
-                    <span class="leg-item"><span class="leg-cor ocupada"></span>ocupada</span>
-                    <span class="leg-item"><span class="leg-cor interditada"></span>interditada</span>
-                </div>
-            </div>
-
-            <div class="card card-historico">
-                <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;">
-                    <span>histórico de eventos</span>
-                    <button onclick="limparHistorico()" style="background:none;border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.3);font-family:monospace;font-size:9px;padding:2px 7px;border-radius:4px;cursor:pointer;letter-spacing:1px;">limpar</button>
-                </div>
-                <div id="historico-lista"></div>
-            </div>
-            <div class="card">
-    <div class="card-title">emergência</div>
-
-    <button id="btn-emergencia"
-        class="btn-emergencia btn-emergencia-desativado"
-        disabled
-        aria-disabled="true">
-        Controle da Cancela
-    </button>
+<!-- ======================
+     MAQUETE
+====================== -->
+<div id="maquete-container" title="Clique numa vaga para interditar ou remover interdição">
+    <img src="/static/img/estacionamento.png" id="estacionamento">
+    <canvas id="overlay"></canvas>
 </div>
 
+<!-- ======================
+     PAINEL
+====================== -->
+<div id="painel" class="painel-fechado">
+
+    <!-- DISPONIBILIDADE -->
+    <div class="card">
+        <div class="card-title">disponibilidade</div>
+
+        <div class="vagas-count">
+            <span id="vagas-livres-num">24</span>
+            <span class="vagas-total">/ 24 vagas</span>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill"></div>
+        </div>
+
+        <div class="vagas-label">
+            <span id="vagas-livres-label">24 livres</span> · 
+            <span id="vagas-ocupadas-label">0 ocupadas</span>
+        </div>
+
+        <div class="vagas-meta" id="vagas-meta"></div>
+
+        <div class="contador-carros-discreto">
+            fluxo total: <span id="total-carros-num">0</span>
         </div>
     </div>
 
+   
+    <!-- MAPA -->
+    <div class="card">
+        <div class="card-title">mapa de vagas</div>
+
+        <div id="mapa-vagas-grid"></div>
+
+        <div class="legenda legenda-wrap">
+            <span class="leg-item"><span class="leg-cor livre"></span>livre</span>
+            <span class="leg-item"><span class="leg-cor ocupada"></span>ocupada</span>
+            <span class="leg-item"><span class="leg-cor interditada"></span>interditada</span>
+        </div>
+    </div>
+
+   <!-- EMERGÊNCIA -->
+    <div class="card">
+        <div class="card-title">emergência</div>
+
+        <button id="btn-emergencia"
+            class="btn-emergencia btn-emergencia-desativado"
+            disabled
+            aria-disabled="true">
+            Controle da Cancela
+        </button>
+    </div>
+
+</div>
+
+</div>
+
+
+
+<!-- ======================
+     MODAL MANUTENÇÃO
+====================== -->
+<div id="modal-manutencao" class="modal-config modal-manutencao" aria-hidden="true">
+
+    <div class="modal-config-backdrop" onclick="fecharManutencao()"></div>
+
+    <div class="modal-config-panel">
+
+        <div class="modal-config-header">
+            <h2>Diagnóstico do Sistema</h2>
+
+            <!-- 🔘 seletor -->
+            <label class="switch">
+                <input type="checkbox" id="toggle-diagnostico" onchange="toggleDiagnostico(this)">
+                <span class="slider"></span>
+            </label>
+
+            <button onclick="fecharManutencao()">✕</button>
+        </div>
+
+        <div class="modal-config-body">
+            <h3>Sensores</h3>
+            <div class="sensores-grid">
+                <div class="sensor-box"><div>S1</div><div id="s1">-</div></div>
+                <div class="sensor-box"><div>S2</div><div id="s2">-</div></div>
+                <div class="sensor-box"><div>S3</div><div id="s3">-</div></div>
+                <div class="sensor-box"><div>S4</div><div id="s4">-</div></div>
+                <div class="sensor-box"><div>S5</div><div id="s5">-</div></div>
+                <div class="sensor-box"><div>S6</div><div id="s6">-</div></div>
+            </div>
+
+            <h3>Servos</h3>
+            <div class="sensores-grid">
+                <div class="sensor-box"><div>Entrada</div><div id="servo1">-</div></div>
+                <div class="sensor-box"><div>Saída</div><div id="servo2">-</div></div>
+            </div>
+
+            <h3>LEDs</h3>
+            <div class="sensores-grid">
+                <div class="sensor-box"><div>Entrada</div><div id="led1">-</div></div>
+                <div class="sensor-box"><div>Lotado</div><div id="led2">-</div></div>
+                <div class="sensor-box"><div>Vermelho</div><div id="led3">-</div></div>
+                <div class="sensor-box"><div>Amarelo</div><div id="led4">-</div></div>
+            </div>
+
+            <h3>Display</h3>
+            <div id="display">- Carros no estacionamento</div>
+
+        </div>
+    </div>
+</div>
+            
     <script src="/static/js/main.js"></script>
 
     <script>
@@ -152,11 +210,12 @@
         setInterval(atualizarRelogio, 1000);
 
         // Toggle painel
-        function togglePainel() {
-            const painel = document.getElementById('painel');
-            painel.classList.toggle('painel-fechado');
-            painel.classList.toggle('painel-aberto');
-        }
+        function togglePainel(){
+    const painel = document.getElementById('painel');
+
+    painel.classList.toggle('painel-aberto');
+    painel.classList.toggle('painel-fechado');
+}
 
         // Mapa de vagas
         function gerarMapaVagas() {
@@ -222,7 +281,7 @@
             localStorage.removeItem('smartpark_historico');
             historicoEventos.length = 0;
             atualizarHistorico();
-        }F
+        }
 
         // Inicializa com o que estava guardado
         const historicoEventos = carregarHistorico();
